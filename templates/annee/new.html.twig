@@ -1,0 +1,12 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New Annee{% endblock %}
+
+{% block body %}
+    <h1>Create new Annee</h1>
+    {{ include('partials/flush.html.twig') }}
+
+    {{ include('annee/_form.html.twig') }}
+
+    <a href="{{ path('app_annee_index') }}">back to list</a>
+{% endblock %}

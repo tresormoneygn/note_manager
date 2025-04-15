@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}DepartementHistorique{% endblock %}
+
+{% block body %}
+    <h1>DepartementHistorique</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ departement_historique.id }}</td>
+            </tr>
+            <tr>
+                <th>Created_at</th>
+                <td>{{ departement_historique.createdAt ? departement_historique.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Updated_at</th>
+                <td>{{ departement_historique.updatedAt ? departement_historique.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_departement_historique_index') }}">back to list</a>
+
+    <a href="{{ path('app_departement_historique_edit', {'id': departement_historique.id}) }}">edit</a>
+
+    {{ include('departement_historique/_delete_form.html.twig') }}
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Etudiant{% endblock %}
+
+{% block body %}
+    <h1>Etudiant</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ etudiant.id }}</td>
+            </tr>
+            <tr>
+                <th>Matricule</th>
+                <td>{{ etudiant.matricule }}</td>
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ etudiant.nom }}</td>
+            </tr>
+            <tr>
+                <th>Prenom</th>
+                <td>{{ etudiant.prenom }}</td>
+            </tr>
+            <tr>
+                <th>Date_naissance</th>
+                <td>{{ etudiant.dateNaissance }}</td>
+            </tr>
+            <tr>
+                <th>Email</th>
+                <td>{{ etudiant.email }}</td>
+            </tr>
+            <tr>
+                <th>Numero</th>
+                <td>{{ etudiant.numero }}</td>
+            </tr>
+            <tr>
+                <th>Addresse</th>
+                <td>{{ etudiant.addresse }}</td>
+            </tr>
+            <tr>
+                <th>Photo</th>
+                <td>{{ etudiant.photo }}</td>
+            </tr>
+            <tr>
+                <th>Lieu_naissance</th>
+                <td>{{ etudiant.lieuNaissance }}</td>
+            </tr>
+            <tr>
+                <th>Pere</th>
+                <td>{{ etudiant.pere }}</td>
+            </tr>
+            <tr>
+                <th>Mere</th>
+                <td>{{ etudiant.mere }}</td>
+            </tr>
+            <tr>
+                <th>Nom_tuteur</th>
+                <td>{{ etudiant.nomTuteur }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_etudiant_index') }}">back to list</a>
+
+    <a href="{{ path('app_etudiant_edit', {'id': etudiant.id}) }}">edit</a>
+
+    {{ include('etudiant/_delete_form.html.twig') }}
+{% endblock %}

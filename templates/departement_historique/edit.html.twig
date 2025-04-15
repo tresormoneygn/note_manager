@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit DepartementHistorique{% endblock %}
+
+{% block body %}
+    <h1>Edit DepartementHistorique</h1>
+
+    {{ include('departement_historique/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_departement_historique_index') }}">back to list</a>
+
+    {{ include('departement_historique/_delete_form.html.twig') }}
+{% endblock %}

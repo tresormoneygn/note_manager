@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UniteEnseignement{% endblock %}
+
+{% block body %}
+    <h1>UniteEnseignement</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ unite_enseignement.id }}</td>
+            </tr>
+            <tr>
+                <th>Nom</th>
+                <td>{{ unite_enseignement.nom }}</td>
+            </tr>
+            <tr>
+                <th>Coefficient</th>
+                <td>{{ unite_enseignement.coefficient }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_unite_enseignement_index') }}">back to list</a>
+
+    <a href="{{ path('app_unite_enseignement_edit', {'id': unite_enseignement.id}) }}">edit</a>
+
+    {{ include('unite_enseignement/_delete_form.html.twig') }}
+{% endblock %}

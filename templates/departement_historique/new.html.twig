@@ -1,0 +1,11 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}New DepartementHistorique{% endblock %}
+
+{% block body %}
+    <h1>Create new DepartementHistorique</h1>
+
+    {{ include('departement_historique/_form.html.twig') }}
+
+    <a href="{{ path('app_departement_historique_index') }}">back to list</a>
+{% endblock %}

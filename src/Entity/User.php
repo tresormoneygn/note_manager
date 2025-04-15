@@ -67,10 +67,21 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: Rapport::class, mappedBy: 'user')]
     private Collection $rapports;
 
+    /**
+     * @var Collection<int, DepartementHistorique>
+     */
+    #[ORM\OneToMany(targetEntity: DepartementHistorique::class, mappedBy: 'user')]
+    private Collection $departementHistoriques;
+
+    #[ORM\ManyToOne(inversedBy: 'user')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?Programme $programme = null;
+
     public function __construct()
     {
         $this->fonctions = new ArrayCollection();
         $this->rapports = new ArrayCollection();
+        $this->departementHistoriques = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -282,6 +293,48 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
                 $rapport->setUser(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, DepartementHistorique>
+     */
+    public function getDepartementHistoriques(): Collection
+    {
+        return $this->departementHistoriques;
+    }
+
+    public function addDepartementHistorique(DepartementHistorique $departementHistorique): static
+    {
+        if (!$this->departementHistoriques->contains($departementHistorique)) {
+            $this->departementHistoriques->add($departementHistorique);
+            $departementHistorique->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeDepartementHistorique(DepartementHistorique $departementHistorique): static
+    {
+        if ($this->departementHistoriques->removeElement($departementHistorique)) {
+            // set the owning side to null (unless already changed)
+            if ($departementHistorique->getUser() === $this) {
+                $departementHistorique->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getProgramme(): ?Programme
+    {
+        return $this->programme;
+    }
+
+    public function setProgramme(?Programme $programme): static
+    {
+        $this->programme = $programme;
 
         return $this;
     }

@@ -1,0 +1,57 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Etudiant index{% endblock %}
+
+{% block body %}
+    <h1>Etudiant index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Matricule</th>
+                <th>Nom</th>
+                <th>Prenom</th>
+                <th>Date_naissance</th>
+                <th>Email</th>
+                <th>Numero</th>
+                <th>Addresse</th>
+                <th>Photo</th>
+                <th>Lieu_naissance</th>
+                <th>Pere</th>
+                <th>Mere</th>
+                <th>Nom_tuteur</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for etudiant in etudiants %}
+            <tr>
+                <td>{{ etudiant.id }}</td>
+                <td>{{ etudiant.matricule }}</td>
+                <td>{{ etudiant.nom }}</td>
+                <td>{{ etudiant.prenom }}</td>
+                <td>{{ etudiant.dateNaissance }}</td>
+                <td>{{ etudiant.email }}</td>
+                <td>{{ etudiant.numero }}</td>
+                <td>{{ etudiant.addresse }}</td>
+                <td>{{ etudiant.photo }}</td>
+                <td>{{ etudiant.lieuNaissance }}</td>
+                <td>{{ etudiant.pere }}</td>
+                <td>{{ etudiant.mere }}</td>
+                <td>{{ etudiant.nomTuteur }}</td>
+                <td>
+                    <a href="{{ path('app_etudiant_show', {'id': etudiant.id}) }}">show</a>
+                    <a href="{{ path('app_etudiant_edit', {'id': etudiant.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="14">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_etudiant_new') }}">Create new</a>
+{% endblock %}

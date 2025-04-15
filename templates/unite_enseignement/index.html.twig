@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}UniteEnseignement index{% endblock %}
+
+{% block body %}
+    <h1>UniteEnseignement index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>Coefficient</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for unite_enseignement in unite_enseignements %}
+            <tr>
+                <td>{{ unite_enseignement.id }}</td>
+                <td>{{ unite_enseignement.nom }}</td>
+                <td>{{ unite_enseignement.coefficient }}</td>
+                <td>
+                    <a href="{{ path('app_unite_enseignement_show', {'id': unite_enseignement.id}) }}">show</a>
+                    <a href="{{ path('app_unite_enseignement_edit', {'id': unite_enseignement.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_unite_enseignement_new') }}">Create new</a>
+{% endblock %}

@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}DepartementHistorique index{% endblock %}
+
+{% block body %}
+    <h1>DepartementHistorique index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Created_at</th>
+                <th>Updated_at</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for departement_historique in departement_historiques %}
+            <tr>
+                <td>{{ departement_historique.id }}</td>
+                <td>{{ departement_historique.createdAt ? departement_historique.createdAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ departement_historique.updatedAt ? departement_historique.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_departement_historique_show', {'id': departement_historique.id}) }}">show</a>
+                    <a href="{{ path('app_departement_historique_edit', {'id': departement_historique.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="4">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_departement_historique_new') }}">Create new</a>
+{% endblock %}

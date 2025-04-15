@@ -2,6 +2,7 @@
 
 namespace App\Controller;
 
+use App\Constant\FormConstant;
 use App\Entity\Fonction;
 use App\Form\FonctionType;
 use App\Repository\FonctionRepository;
@@ -33,6 +34,7 @@ final class FonctionController extends AbstractController
             $entityManager->persist($fonction);
             $entityManager->flush();
 
+            $this->addFlash(FormConstant::ALERT_SUCCESS->value, 'Fonction ajouté avec success.');
             return $this->redirectToRoute('app_fonction_index', [], Response::HTTP_SEE_OTHER);
         }
 

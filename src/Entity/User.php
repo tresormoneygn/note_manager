@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -49,6 +51,27 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 50)]
     private ?string $addresse = null;
+
+    /**
+     * @var Collection<int, Fonction>
+     */
+    #[ORM\ManyToMany(targetEntity: Fonction::class, inversedBy: 'users')]
+    private Collection $fonctions;
+
+    #[ORM\ManyToOne(inversedBy: 'user')]
+    private ?Rapport $rapport = null;
+
+    /**
+     * @var Collection<int, Rapport>
+     */
+    #[ORM\OneToMany(targetEntity: Rapport::class, mappedBy: 'user')]
+    private Collection $rapports;
+
+    public function __construct()
+    {
+        $this->fonctions = new ArrayCollection();
+        $this->rapports = new ArrayCollection();
+    }
 
     public function getId(): ?int
     {
@@ -193,6 +216,72 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setAddresse(string $addresse): static
     {
         $this->addresse = $addresse;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Fonction>
+     */
+    public function getFonctions(): Collection
+    {
+        return $this->fonctions;
+    }
+
+    public function addFonction(Fonction $fonction): static
+    {
+        if (!$this->fonctions->contains($fonction)) {
+            $this->fonctions->add($fonction);
+        }
+
+        return $this;
+    }
+
+    public function removeFonction(Fonction $fonction): static
+    {
+        $this->fonctions->removeElement($fonction);
+
+        return $this;
+    }
+
+    public function getRapport(): ?Rapport
+    {
+        return $this->rapport;
+    }
+
+    public function setRapport(?Rapport $rapport): static
+    {
+        $this->rapport = $rapport;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Rapport>
+     */
+    public function getRapports(): Collection
+    {
+        return $this->rapports;
+    }
+
+    public function addRapport(Rapport $rapport): static
+    {
+        if (!$this->rapports->contains($rapport)) {
+            $this->rapports->add($rapport);
+            $rapport->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRapport(Rapport $rapport): static
+    {
+        if ($this->rapports->removeElement($rapport)) {
+            // set the owning side to null (unless already changed)
+            if ($rapport->getUser() === $this) {
+                $rapport->setUser(null);
+            }
+        }
 
         return $this;
     }

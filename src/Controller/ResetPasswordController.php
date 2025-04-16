@@ -44,7 +44,10 @@ class ResetPasswordController extends AbstractController
             /** @var string $email */
             $email = $form->get('email')->getData();
 
-            return $this->processSendingPasswordResetEmail($email, $mailer, $translator
+            return $this->processSendingPasswordResetEmail(
+                $email,
+                $mailer,
+                $translator
             );
         }
 
@@ -85,13 +88,11 @@ class ResetPasswordController extends AbstractController
         }
 
         $token = $this->getTokenFromSession();
-
         if (null === $token) {
             throw $this->createNotFoundException('No reset password token found in the URL or in the session.');
         }
 
         try {
-            /** @var User $user */
             $user = $this->resetPasswordHelper->validateTokenAndFetchUser($token);
         } catch (ResetPasswordExceptionInterface $e) {
             $this->addFlash('reset_password_error', sprintf(
@@ -156,6 +157,15 @@ class ResetPasswordController extends AbstractController
             return $this->redirectToRoute('app_check_email');
         }
 
+        // Solution temporaire : afficher le lien directement pour débloquer le travail d'équipe
+        $this->addFlash(
+            'reset_link',
+            sprintf(
+                'Lien de réinitialisation (temporaire) : <a href="%s">Cliquez ici pour réinitialiser votre mot de passe</a>',
+                $this->generateUrl('app_reset_password', ['token' => $resetToken->getToken()])
+            )
+        );
+
         $email = (new TemplatedEmail())
             ->from(new Address('jeankelouaouamouno71@gmail.com', 'noteManage'))
             ->to((string) $user->getEmail())
@@ -166,7 +176,15 @@ class ResetPasswordController extends AbstractController
             ])
         ;
 
-        $mailer->send($email);
+        try {
+            $mailer->send($email);
+        } catch (\Exception $e) {
+            // Capturer l'erreur mais continuer l'exécution
+            $this->addFlash(
+                'mailer_error',
+                'Erreur lors de l\'envoi de l\'email, mais vous pouvez utiliser le lien ci-dessus.'
+            );
+        }
 
         // Store the token object in session for retrieval in check-email route.
         $this->setTokenObjectInSession($resetToken);

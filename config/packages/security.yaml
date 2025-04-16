@@ -20,8 +20,19 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
+                default_target_path: app_home
             logout:
                 path: app_logout
+                target: app_login
+            custom_authenticator: App\Security\UserAuthenticator
+            entry_point: form_login
+            remember_me:
+                secret: '%kernel.secret%'
+                lifetime: 604800
+                path: /
+                # by default, the feature is enabled by checking a checkbox in the
+                # login form, uncomment the following line to always enable it.
+                #always_remember_me: true
                 # where to redirect after logout
                 # target: app_any_route
 

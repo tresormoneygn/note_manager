@@ -51,6 +51,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     #[ORM\Column(length: 50)]
     private ?string $addresse = null;
+    #[ORM\Column(type: 'boolean')]
+    private bool $isVerified = false;
 
     /**
      * @var Collection<int, Fonction>
@@ -239,6 +241,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this->fonctions;
     }
 
+    public function isVerified(): bool
+    {
+        return $this->isVerified;
+    }
+
+    public function setIsVerified(bool $isVerified): self
+    {
+        $this->isVerified = $isVerified;
+
+        return $this;
+    }
     public function addFonction(Fonction $fonction): static
     {
         if (!$this->fonctions->contains($fonction)) {

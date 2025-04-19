@@ -38,6 +38,9 @@ class Programme
     #[ORM\Column]
     private ?\DateTimeImmutable $updated_at = null;
 
+    #[ORM\Column(length: 50)]
+    private ?string $label = null;
+
     public function __construct()
     {
         $this->user = new ArrayCollection();
@@ -134,6 +137,18 @@ class Programme
     public function setUpdatedAt(\DateTimeImmutable $updated_at): static
     {
         $this->updated_at = $updated_at;
+
+        return $this;
+    }
+
+    public function getLabel(): ?string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(string $label): static
+    {
+        $this->label = $label;
 
         return $this;
     }

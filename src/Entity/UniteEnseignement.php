@@ -32,6 +32,9 @@ class UniteEnseignement
     #[ORM\JoinColumn(nullable: false)]
     private ?Semestre $semestre = null;
 
+    #[ORM\Column(length: 50)]
+    private ?string $label = null;
+
     public function __construct()
     {
         $this->matieres = new ArrayCollection();
@@ -116,6 +119,18 @@ class UniteEnseignement
     public function setSemestre(?Semestre $semestre): static
     {
         $this->semestre = $semestre;
+
+        return $this;
+    }
+
+    public function getLabel(): ?string
+    {
+        return $this->label;
+    }
+
+    public function setLabel(string $label): static
+    {
+        $this->label = $label;
 
         return $this;
     }

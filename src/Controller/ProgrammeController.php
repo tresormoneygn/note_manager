@@ -10,6 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\ORM\Query\Parameter;
+use Doctrine\Common\Collections\ArrayCollection;
 
 #[Route('/programme')]
 final class ProgrammeController extends AbstractController
@@ -23,17 +25,43 @@ final class ProgrammeController extends AbstractController
     }
 
     #[Route('/new', name: 'app_programme_new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ProgrammeRepository $programmeRepository): Response
     {
         $programme = new Programme();
         $form = $this->createForm(ProgrammeType::class, $programme);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($programme);
-            $entityManager->flush();
+            // 1. Mise en forme automatique
+            $programme->setLabel(strtoupper($programme->getLabel()));
+            $programme->setName(ucwords(strtolower($programme->getName())));
+            $now = new \DateTimeImmutable();
+            $programme->setCreatedAt($now);
+            $programme->setUpdatedAt($now);
 
-            return $this->redirectToRoute('app_programme_index', [], Response::HTTP_SEE_OTHER);
+            // 2. Vérifier s’il existe déjà un doublon
+            $exist = $programmeRepository->createQueryBuilder('p')
+                ->where('p.annee = :annee')
+                ->andWhere('p.departement = :departement')
+                ->andWhere('p.label = :label OR p.name = :name')
+                ->setParameters(new ArrayCollection([
+                    new Parameter('annee', $programme->getAnnee()),
+                    new Parameter('departement', $programme->getDepartement()),
+                    new Parameter('label', $programme->getLabel()),
+                    new Parameter('name', $programme->getName()),
+                ]))
+                ->getQuery()
+                ->getOneOrNullResult();
+
+                if ($exist) {
+                    $this->addFlash('error', 'Un programme avec ce label ou ce nom existe déjà pour cette année et ce département.');
+                } else {
+                    $entityManager->persist($programme);
+                    $entityManager->flush();
+            
+                    $this->addFlash('success', 'Programme ajouté avec succès.');
+                    return $this->redirectToRoute('app_programme_index', [], Response::HTTP_SEE_OTHER);
+                }
         }
 
         return $this->render('programme/new.html.twig', [

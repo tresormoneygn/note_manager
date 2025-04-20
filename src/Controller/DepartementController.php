@@ -10,6 +10,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\ORM\Query\Parameter;
+use Doctrine\Common\Collections\ArrayCollection;
 
 #[Route('/departement')]
 final class DepartementController extends AbstractController
@@ -30,10 +32,33 @@ final class DepartementController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($departement);
-            $entityManager->flush();
+            // Formatage
+            $departement->setLabel(strtoupper($departement->getLabel()));
+            $departement->setName(ucwords(strtolower($departement->getName())));
+            // Vérification doublon (sans casse)
+            $existing = $entityManager->createQueryBuilder()
+            ->select('d')
+            ->from(Departement::class, 'd')
+            ->where('LOWER(d.label) = :label OR LOWER(d.name) = :name')
+            ->setParameters(new ArrayCollection([
+                new Parameter('label', strtolower($departement->getLabel())),
+                new Parameter('name', strtolower($departement->getName())),
+            ]))
+            ->getQuery()
+            ->getOneOrNullResult();
 
-            return $this->redirectToRoute('app_departement_index', [], Response::HTTP_SEE_OTHER);
+            if ($existing) {
+                $this->addFlash('error', 'Un département avec ce nom ou ce label existe déjà.');
+            } else {
+                $entityManager->persist($departement);
+                $entityManager->flush();
+    
+                $this->addFlash('success', 'Département ajouté avec succès.');
+                return $this->redirectToRoute('app_departement_index', [], Response::HTTP_SEE_OTHER);
+            }
+
+
+            
         }
 
         return $this->render('departement/new.html.twig', [

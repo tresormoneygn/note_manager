@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\DepartementHistorique;
+use App\Entity\Departement;
 use App\Form\DepartementHistoriqueType;
 use App\Repository\DepartementHistoriqueRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -10,11 +11,13 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Doctrine\ORM\Query\Parameter;
+use Doctrine\Common\Collections\ArrayCollection;
 
-#[Route('/departement/historique')]
+#[Route('/departementhistorique')]
 final class DepartementHistoriqueController extends AbstractController
 {
-    #[Route(name: 'app_departement_historique_index', methods: ['GET'])]
+    #[Route('/',name: 'app_departement_historique_index', methods: ['GET'])]
     public function index(DepartementHistoriqueRepository $departementHistoriqueRepository): Response
     {
         return $this->render('departement_historique/index.html.twig', [
@@ -30,10 +33,39 @@ final class DepartementHistoriqueController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $entityManager->persist($departementHistorique);
-            $entityManager->flush();
+            // Formatage du nom
+            //$departementHistorique->setName(ucwords(strtolower($departementHistorique->getName())));
 
-            return $this->redirectToRoute('app_departement_historique_index', [], Response::HTTP_SEE_OTHER);
+            // Vérification doublon pour même annee, même département et même nom (sans casse)
+            $exist = $entityManager->createQueryBuilder()
+                ->select('h')
+                ->from(DepartementHistorique::class, 'h')
+                ->join('h.departement', 'd')
+                ->where('h.annee = :annee')
+                ->andWhere('h.departement = :departement')
+                ->andWhere('LOWER(d.name) = :name')
+                ->setParameters(new ArrayCollection([
+                    new Parameter('annee', $departementHistorique->getAnnee()),
+                    new Parameter('departement', $departementHistorique->getDepartement()),
+                    new Parameter('name', strtolower($departementHistorique->getDepartement()->getName())),
+                ]))
+                ->getQuery()
+                ->getOneOrNullResult();
+            
+
+            if ($exist) {
+                $this->addFlash('error', 'Ce département historique existe déjà pour cette année et ce département.');
+            } else {
+                $now = new \DateTimeImmutable();
+                $departementHistorique->setCreatedAt($now);
+                $departementHistorique->setUpdatedAt($now);
+
+                $entityManager->persist($departementHistorique);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Département historique enregistré avec succès.');
+                return $this->redirectToRoute('app_departement_historique_index');
+            }
         }
 
         return $this->render('departement_historique/new.html.twig', [

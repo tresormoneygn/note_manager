@@ -4,6 +4,14 @@
 
 {% block body %}
     <h1>Create new Departement</h1>
+     {# Affichage des messages flashs #}
+    {% for label, messages in app.flashes %}
+        {% for message in messages %}
+            <div class="alert alert-{{ label }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endfor %}
 
     {{ include('departement/_form.html.twig') }}
 

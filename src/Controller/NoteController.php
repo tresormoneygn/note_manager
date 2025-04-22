@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\Note;
 use App\Form\NoteType;
 use App\Repository\NoteRepository;
+use App\Form\FiltreNoteType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -15,11 +16,66 @@ use Symfony\Component\Routing\Attribute\Route;
 final class NoteController extends AbstractController
 {
     #[Route(name: 'app_note_index', methods: ['GET'])]
-    public function index(NoteRepository $noteRepository): Response
+    public function index(Request $request, NoteRepository $noteRepository): Response
     {
-        return $this->render('note/index.html.twig', [
-            'notes' => $noteRepository->findAll(),
+        $form = $this->createForm(FiltreNoteType::class, null, [
+            'method' => 'GET'
         ]);
+        $form->handleRequest($request);
+
+        $notes = [];
+        $noteData = []; // Pour stocker les données du graphique
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $data = $form->getData();
+            $matricule = $data['matricule'] ?? null;
+            $nom = $data['nom'] ?? null;
+            $annee = $data['annee'] ?? null;
+
+            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee);
+            // Calculer les statistiques des notes
+            $noteData = $this->calculateNoteStatistics($notes);
+        } else {
+            $notes = $noteRepository->findAll();
+        }
+
+        return $this->render('note/index.html.twig', [
+            'form' => $form->createView(),
+            'notes' => $notes,
+            'noteData' => $noteData, // Passer les données au template
+        ]);
+
+        // return $this->render('note/index.html.twig', [
+        //     'form' => $form->createView(),
+        //     'notes' => $noteRepository->findAll(),
+        // ]);
+
+
+
+        
+    }
+
+
+    private function calculateNoteStatistics($notes)
+    {
+        // Exemple de calcul de répartition des notes
+        $noteData = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
+
+        foreach ($notes as $note) {
+            if ($note->getValue() >= 9) {
+                $noteData['A']++;
+            } elseif ($note->getValue() >= 8) {
+                $noteData['B']++;
+            } elseif ($note->getValue() >= 7) {
+                $noteData['C']++;
+            } elseif ($note->getValue() >= 6) {
+                $noteData['D']++;
+            } else {
+                $noteData['E']++;
+            }
+        }
+
+        return $noteData;
     }
 
     #[Route('/new', name: 'app_note_new', methods: ['GET', 'POST'])]
@@ -78,4 +134,8 @@ final class NoteController extends AbstractController
 
         return $this->redirectToRoute('app_note_index', [], Response::HTTP_SEE_OTHER);
     }
+
+
+
+   
 }

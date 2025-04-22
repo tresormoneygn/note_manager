@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Constant\FileConstant;
+use App\Constant\xtnsionConstant;
 use App\Entity\Etudiant;
 use App\Entity\Rapport;
 use App\Form\ImportRapportType;
@@ -26,25 +27,37 @@ final class RapportController extends AbstractController
     {
         $form = $this->createForm(ImportRapportType::class);
         $form->handleRequest($request);
+        $newFilename = '';
 
         if ($form->isSubmitted() && $form->isValid()) {
             $excelFile = $form->get('rapport')->getData();
-
+            $newFilename = '';
             if ($excelFile) {
+                // Vérification que le fichier est bien uploadé
+                if (!$excelFile->isValid()) {
+                    $this->addFlash('danger', 'Erreur lors de l\'upload du fichier');
+                    return $this->redirectToRoute('import_rapport');
+                }
                 $originalFilename = pathinfo($excelFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
                 $newFilename = $safeFilename.'-'.uniqid().'.'.$excelFile->guessExtension();
-                $filePath = $this->getParameter('uploads_directory') . '/' . $newFilename;
+                $uploadDir = $this->getParameter('uploads_directory');
+                $filePath = $uploadDir . '/' . $newFilename;
+
+                // Création du répertoire s'il n'existe pas
+                if (!file_exists($uploadDir)) {
+                    if (!mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+                        $this->addFlash('danger', 'Impossible de créer le répertoire d\'upload');
+                        return $this->redirectToRoute('import_rapport');
+                    }
+                }
 
                 try {
                     $excelFile->move(
-                        $this->getParameter('uploads_directory'), // définie dans services.yaml
+                        $uploadDir,
                         $newFilename
                     );
                 } catch (FileException $e) {
-//                    if (file_exists($filePath)) {
-//                        unlink($filePath); // ⬅️ Supprimer le fichier uploadé
-//                    }
                     $this->addFlash('danger', 'Erreur lors de l\'enregistrement du fichier');
                     return $this->redirectToRoute('import_rapport');
                 }
@@ -64,10 +77,6 @@ final class RapportController extends AbstractController
                         $rowData[] = $cell->getValue();
                     }
 
-                    // Verification si la premiere colonne et si on es a la seconde ligne
-                    if($rowData[0] == null and $row->getRowIndex() != 1)
-                        break;
-
                     // Vérification si l'entête correspond bien a ce qui est attendu
                     if(
                         ($rowData[0] !== FileConstant::EXCEL_FILE_NUMERO->value and $row->getRowIndex() == 1) or
@@ -75,40 +84,39 @@ final class RapportController extends AbstractController
                         ($rowData[2] !== FileConstant::EXCEL_FILE_NOM->value and $row->getRowIndex() == 1) or
                         ($rowData[3] !== FileConstant::EXCEl_FILE_PRENOM->value and $row->getRowIndex() == 1)
                     ){
-//                        if (file_exists($filePath)) {
-//                            unlink($filePath); // ⬅️ Supprimer le fichier uploadé
-//                        }
                         $this->addFlash('warning', 'Ce fichier excel est invalide, veuillez le remplacer');
                         return $this->redirectToRoute('import_rapport');
                     }
+
+
                     // Verifier si on est plus a la premiere ligne
                     if( $row->getRowIndex() == 1 )
                         continue;
 
+                    $nb = $rowData[0];
                     $matricule = trim($rowData[1]);
                     $nom = $rowData[2];
                     $prenom = $rowData[3];
 
+                    if( $nb === null) {
+                        break;
+                    }
+
                     if( $studentRepository->findOneBy(['matricule' => $matricule]) != null ){
-//                        if (file_exists($filePath)) {
-//                            unlink($filePath); // ⬅️ Supprimer le fichier uploadé
-//                        }
                         $this->addFlash('warning', 'Ce fichier contient un etudiant déja inscrit !');
                         return $this->redirectToRoute('import_rapport');
                     };
 
 
                     if( preg_match('/^\d{12}$/', $matricule) === 0){
-//                        if (file_exists($filePath)) {
-//                            unlink($filePath); // ⬅️ Supprimer le fichier uploadé
-//                        }
-                        $this->addFlash('warning', "Ce fichier excel contient un matricule invalide. Matricule $matricule. Ligne : ${rowData[0]}");
+                        $this->addFlash('warning', "Ce fichier excel contient un matricule invalide. Matricule $matricule. Ligne : {$rowData[0]}");
                         return $this->redirectToRoute('import_rapport');
                     }
 
                     $rowData = [$matricule, $nom, $prenom];
                     $data[] = $rowData;
                 }
+
                 foreach ($data as $dt){
                     $std = new Etudiant();
                     $std->setMatricule($dt[0]);
@@ -119,15 +127,14 @@ final class RapportController extends AbstractController
                     $em->flush();
                 }
 
-
                 // Sauvegarder un Rapport
                 $rapport = new Rapport();
                 $rapport->setFilename($newFilename);
-                $rapport->setType($excelFile->getMimeType());
+                $rapport->setType(xtnsionConstant::EXCEL_FILE_XTNSION->value);
                 $rapport->setCreatedAt(new \DateTimeImmutable());
                 $rapport->setUpdatedAt(new \DateTimeImmutable());
                 $rapport->setUser($security->getUser());
-//
+
                 $em->persist($rapport);
                 $em->flush();
 

@@ -3,14 +3,48 @@
 {% block title %}Etudiant index{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto px-4 py-8">
+    <div class="container mx-auto px-2">
         {{ include('partials/flush.html.twig') }}
-        <h1 class="text-3xl font-bold text-gray-800 mb-6">Liste des Étudiants</h1>
 
-        <div class="mb-4">
+        {# Formulaire de recherche #}
+        <div class="bg-white p-4 rounded-lg shadow">
+            <form method="get" action="{{ path('app_etudiant_index') }}" class="flex flex-wrap gap-4 items-end">
+                <div class="flex-grow">
+                    <label for="matricule" class="block text-sm font-medium text-gray-700 mb-1">Matricule</label>
+                    <input type="text" id="matricule" name="matricule" value="{{ app.request.query.get('matricule') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="flex-grow">
+                    <label for="nom" class="block text-sm font-medium text-gray-700 mb-1">Nom</label>
+                    <input type="text" id="nom" name="nom" value="{{ app.request.query.get('nom') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div class="flex-grow">
+                    <label for="prenom" class="block text-sm font-medium text-gray-700 mb-1">Prénom</label>
+                    <input type="text" id="prenom" name="prenom" value="{{ app.request.query.get('prenom') }}"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition duration-200">
+                        <i class="fas fa-search mr-2"></i>Rechercher
+                    </button>
+                    <a href="{{ path('app_etudiant_index') }}" class="ml-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium py-2 px-4 rounded-md transition duration-200">
+                        Réinitialiser
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="my-4 flex justify-end gap-4 items-end">
             <a href="{{ path('app_etudiant_new') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition duration-200">
                 Créer un nouvel étudiant
             </a>
+            <button class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition duration-200" id="openModal">
+                Importer un fichier excel
+            </button>
         </div>
 
         <div class="overflow-x-auto bg-white rounded-lg shadow">
@@ -38,10 +72,13 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ etudiant.email }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ etudiant.numero }}</td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                            <div class="flex space-x-2">
-                                <a href="{{ path('app_etudiant_show', {'id': etudiant.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
-                                <span class="text-gray-400">|</span>
-                                <a href="{{ path('app_etudiant_edit', {'id': etudiant.id}) }}" class="text-green-600 hover:text-green-900">Modifier</a>
+                            <div class="flex space-x-4">
+                                <a href="{{ path('app_etudiant_show', {'id': etudiant.id}) }}" class="text-indigo-600 hover:text-indigo-900 flex items-center space-x-1">
+                                    <i class="fas fa-eye"></i><span>Voir</span>
+                                </a>
+                                <a href="{{ path('app_etudiant_edit', {'id': etudiant.id}) }}" class="text-green-600 hover:text-green-900 flex items-center space-x-1">
+                                    <i class="fas fa-edit"></i><span>Modifier</span>
+                                </a>
                             </div>
                         </td>
                     </tr>
@@ -52,13 +89,11 @@
                 {% endfor %}
                 </tbody>
             </table>
-        </div>
 
-        <!-- Bouton qui ouvre le modal -->
-        <div class="mt-4 text-center">
-            <button class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition duration-200" id="openModal">
-                Importer un fichier excel
-            </button>
+            {# Ajout de la pagination #}
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                {{ knp_pagination_render(etudiants) }}
+            </div>
         </div>
 
         <!-- Modal -->
@@ -66,7 +101,7 @@
             <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
                 <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Importer un rapport Excel</h1>
 
-                {{ form_start(form) }}
+                {{ form_start(form, { 'action': path('import_rapport') }) }}
                 <div class="mb-4">
                     {{ form_row(form.rapport, {
                         'attr': {'class': 'block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'}
@@ -83,6 +118,104 @@
                 </button>
             </div>
         </div>
+
+        <!-- Section des diagrammes de notes universitaires -->
+        <div class="mt-12 bg-white rounded-xl shadow-2xl p-8">
+            <h2 class="text-3xl font-semibold mb-6 text-gray-800">
+                <i class="fas fa-chart-bar mr-3"></i>Statistiques des Notes
+            </h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Diagramme de répartition des notes -->
+                <div>
+                    <h3 class="text-xl font-medium mb-4 text-gray-700">Répartition des notes</h3>
+                    <canvas id="gradesDistributionChart"></canvas>
+                </div>
+                <!-- Diagramme des moyennes par filière -->
+                <div>
+                    <h3 class="text-xl font-medium mb-4 text-gray-700">Moyennes par filière</h3>
+                    <canvas id="gradesByProgramChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            // Diagramme de répartition des notes
+            const ctxDistribution = document.getElementById('gradesDistributionChart').getContext('2d');
+            const gradesDistributionChart = new Chart(ctxDistribution, {
+                type: 'pie',
+                data: {
+                    labels: ['0-5', '5-10', '10-15', '15-20'],
+                    datasets: [{
+                        label: 'Répartition des notes',
+                        data: [5, 15, 25, 10],
+                        backgroundColor: [
+                            '#EF4444', // Rouge pour 0-5
+                            '#F59E0B', // Orange pour 5-10
+                            '#3B82F6', // Bleu pour 10-15
+                            '#10B981'  // Vert pour 15-20
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw}% des étudiants`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Diagramme des moyennes par filière
+            const ctxProgram = document.getElementById('gradesByProgramChart').getContext('2d');
+            const gradesByProgramChart = new Chart(ctxProgram, {
+                type: 'bar',
+                data: {
+                    labels: ['Informatique', 'Mathématiques', 'Physique', 'Chimie', 'Biologie'],
+                    datasets: [{
+                        label: 'Moyenne générale',
+                        data: [12.5, 14.2, 11.8, 13.6, 15.1],
+                        backgroundColor: '#4F46E5',
+                        borderColor: '#4F46E5',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 20,
+                            title: {
+                                display: true,
+                                text: 'Moyenne /20'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Moyenne: ${context.raw}/20`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
 
         <!-- Script pour ouvrir et fermer le modal -->
         <script>

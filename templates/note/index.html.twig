@@ -1,45 +1,77 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Note index{% endblock %}
+{% block title %}Gestion des Notes{% endblock %}
+
+{% block page_title %}Gestion des Notes{% endblock %}
 
 {% block body %}
-    <h1>Note index</h1>
+    <div class="container mx-auto px-4 py-6">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold text-gray-800">Liste des Notes</h1>
+            <a href="{{ path('app_note_new') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
+                <i class="fas fa-plus-circle mr-2"></i> Nouvelle Note
+            </a>
+        </div>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Note_1</th>
-                <th>Note_2</th>
-                <th>Note_3</th>
-                <th>Created_at</th>
-                <th>Updated_at</th>
-                <th>Max_delay</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for note in notes %}
-            <tr>
-                <td>{{ note.id }}</td>
-                <td>{{ note.note1 }}</td>
-                <td>{{ note.note2 }}</td>
-                <td>{{ note.note3 }}</td>
-                <td>{{ note.createdAt ? note.createdAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ note.updatedAt ? note.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ note.maxDelay ? note.maxDelay|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_note_show', {'id': note.id}) }}">show</a>
-                    <a href="{{ path('app_note_edit', {'id': note.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="8">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-
-    <a href="{{ path('app_note_new') }}">Create new</a>
+        <div class="bg-white shadow-md rounded-lg overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note 1</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note 2</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note 3</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Créé le</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Modifié le</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Délai max</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                    {% for note in notes %}
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ note.id }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if note.note1 < 10 %}text-red-600{% else %}text-green-600{% endif %}">
+                                {{ note.note1|number_format(2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if note.note2 < 10 %}text-red-600{% else %}text-green-600{% endif %}">
+                                {{ note.note2|number_format(2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium {% if note.note3 < 10 %}text-red-600{% else %}text-green-600{% endif %}">
+                                {{ note.note3|number_format(2) }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ note.createdAt ? note.createdAt|date('d/m/Y H:i') : '' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ note.updatedAt ? note.updatedAt|date('d/m/Y H:i') : '' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ note.maxDelay ? note.maxDelay|date('d/m/Y') : '' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <div class="flex space-x-2">
+                                    <a href="{{ path('app_note_show', {'id': note.id}) }}" class="text-indigo-600 hover:text-indigo-900" title="Voir">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <span class="text-gray-300">|</span>
+                                    <a href="{{ path('app_note_edit', {'id': note.id}) }}" class="text-green-600 hover:text-green-900" title="Modifier">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr>
+                            <td colspan="8" class="px-6 py-4 text-center text-sm text-gray-500">
+                                <i class="fas fa-info-circle mr-2"></i>Aucune note trouvée
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 {% endblock %}

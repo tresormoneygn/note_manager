@@ -1,0 +1,271 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tableau de Bord - Gestion des Notes{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">Gestion Scolaire</h1>
+                    <div class="flex items-center space-x-4">
+                        <span class="text-sm text-gray-600">Connecté en tant que <strong>{{ app.user ? app.user.username : 'Administrateur' }}</strong></span>
+                        <button id="theme-toggle" class="text-gray-500 hover:text-gray-700 transition duration-300">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                        <a href="{{ path('app_logout') }}" class="bg-indigo-600 text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 transition duration-300">
+                            Déconnexion
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- Stats Section -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <!-- Card Étudiants -->
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-indigo-100 p-3 rounded-md">
+                            <i class="fas fa-user-graduate text-indigo-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Étudiants</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ student_count ?? 0 }}</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Matières -->
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 p-3 rounded-md">
+                            <i class="fas fa-book text-green-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Matières</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ matieres_count ?? 0 }}</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Notes -->
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 p-3 rounded-md">
+                            <i class="fas fa-file-alt text-blue-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Notes enregistrées</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ notes_count ?? 0 }}</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Moyenne -->
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5 transform hover:scale-105 transition duration-300">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-purple-100 p-3 rounded-md">
+                            <i class="fas fa-chart-line text-purple-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Moyenne générale</dt>
+                            <dd class="text-2xl font-semibold text-gray-900">{{ moyenne_generale ?? '0.00' }}/20</dd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                <!-- Left Column -->
+                <div class="lg:col-span-2 space-y-5">
+                    <!-- Dernières notes -->
+                    <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+                        <div class="px-4 py-5 sm:px-6 flex justify-between items-center border-b border-gray-200">
+                            <h3 class="text-lg font-medium text-gray-900">Dernières notes</h3>
+                            <a href="{{ path('app_note_index') }}" class="text-sm text-indigo-600 hover:text-indigo-900 transition duration-300">
+                                Voir toutes
+                            </a>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Étudiant</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matière</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Note</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                                </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-gray-200">
+                                {% for note in dernieres_notes|default([]) %}
+                                    <tr class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ note.etudiant.nomComplet }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ note.matiere.nom }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium {% if note.valeur < 10 %}text-red-600{% else %}text-green-600{% endif %}">
+                                            {{ note.valeur|number_format(2) }}
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                            {{ note.createdAt|date('d/m/Y') }}
+                                        </td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500">
+                                            Aucune note enregistrée
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Graphique de répartition -->
+                    <div class="bg-white shadow-lg rounded-lg p-5">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition des notes</h3>
+                        <canvas id="gradesChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-5">
+                    <!-- Actions rapides -->
+                    <div class="bg-white shadow-lg rounded-lg p-5">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Actions rapides</h3>
+                        <div class="space-y-3">
+                            <a href="{{ path('app_note_new') }}" class="block w-full bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-300 flex items-center">
+                                <i class="fas fa-plus-circle mr-2"></i> Saisir une note
+                            </a>
+                            <a href="{{ path('app_etudiant_new') }}" class="block w-full bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition duration-300 flex items-center">
+                                <i class="fas fa-user-plus mr-2"></i> Ajouter un étudiant
+                            </a>
+                            <a href="{{ path('app_matiere_new') }}" class="block w-full bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition duration-300 flex items-center">
+                                <i class="fas fa-book-medical mr-2"></i> Créer une matière
+                            </a>
+                            <a href="{{ path('app_classe_index') }}" class="block w-full bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition duration-300 flex items-center">
+                                <i class="fas fa-users-class mr-2"></i> Gérer les classes
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Alertes -->
+                    <div class="bg-white shadow-lg rounded-lg p-5">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Alertes</h3>
+                        <ul class="space-y-3">
+                            {% if notes_en_retard|default([])|length > 0 %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 mt-1 mr-2"></i>
+                                    <span class="text-sm text-gray-600">
+                                {{ notes_en_retard|length }} note(s) en retard de saisie
+                            </span>
+                                </li>
+                            {% endif %}
+                            {% if etudiants_sans_notes|default([])|length > 0 %}
+                                <li class="flex items-start">
+                                    <i class="fas fa-user-slash text-red-500 mt-1 mr-2"></i>
+                                    <span class="text-sm text-gray-600">
+                                {{ etudiants_sans_notes|length }} étudiant(s) sans notes
+                            </span>
+                                </li>
+                            {% endif %}
+                            {% if not notes_en_retard|default([])|length and not etudiants_sans_notes|default([])|length %}
+                                <li class="flex items-center">
+                                    <i class="fas fa-check-circle text-green-500 mr-2"></i>
+                                    <span class="text-sm text-gray-600">Tout est à jour</span>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+
+                    <!-- Calendrier -->
+                    <div class="bg-white shadow-lg rounded-lg p-5">
+                        <h3 class="text-lg font-medium text-gray-900 mb-4">Échéances</h3>
+                        <div id="calendar" class="text-sm">
+                            <!-- Intégration simple d'un calendrier -->
+                            <div class="text-center font-semibold mb-2">Mai 2023</div>
+                            <div class="grid grid-cols-7 gap-1 text-center">
+                                <div class="font-medium text-xs text-gray-500">L</div>
+                                <div class="font-medium text-xs text-gray-500">M</div>
+                                <div class="font-medium text-xs text-gray-500">M</div>
+                                <div class="font-medium text-xs text-gray-500">J</div>
+                                <div class="font-medium text-xs text-gray-500">V</div>
+                                <div class="font-medium text-xs text-gray-500">S</div>
+                                <div class="font-medium text-xs text-gray-500">D</div>
+
+                                <!-- Jours du mois -->
+                                {% for i in 1..31 %}
+                                    {% if i == 15 %}
+                                        <div class="p-1 rounded-full bg-indigo-100 text-indigo-800">15</div>
+                                    {% else %}
+                                        <div class="p-1">{{ i }}</div>
+                                    {% endif %}
+                                {% endfor %}
+                            </div>
+                            <div class="mt-3 text-xs text-gray-500">
+                                <i class="fas fa-circle text-indigo-500 mr-1"></i> Date limite de saisie
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Graphique des notes
+        const gradesCtx = document.getElementById('gradesChart').getContext('2d');
+        const gradesChart = new Chart(gradesCtx, {
+            type: 'bar',
+            data: {
+                labels: ['0-5', '5-10', '10-15', '15-20'],
+                datasets: [{
+                    label: 'Nombre d\'étudiants',
+                    data: [5, 12, 18, 8],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.7)',
+                        'rgba(249, 115, 22, 0.7)',
+                        'rgba(234, 179, 8, 0.7)',
+                        'rgba(16, 185, 129, 0.7)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+
+        // Gestion du thème
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            document.documentElement.classList.toggle('dark');
+            const icon = this.querySelector('i');
+            icon.classList.toggle('fa-moon');
+            icon.classList.toggle('fa-sun');
+
+            // Sauvegarder la préférence
+            const isDark = document.documentElement.classList.contains('dark');
+            localStorage.setItem('darkMode', isDark);
+        });
+
+        // Appliquer le thème au chargement
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+            document.getElementById('theme-toggle').querySelector('i').classList.remove('fa-moon');
+            document.getElementById('theme-toggle').querySelector('i').classList.add('fa-sun');
+        }
+    </script>
+{% endblock %}

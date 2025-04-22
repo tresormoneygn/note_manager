@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use App\Constant\FileConstant;
+use App\Entity\Etudiant;
 use App\Entity\Rapport;
 use App\Form\ImportRapportType;
 use App\Form\RapportType;
@@ -32,6 +34,7 @@ final class RapportController extends AbstractController
                 $originalFilename = pathinfo($excelFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
                 $newFilename = $safeFilename.'-'.uniqid().'.'.$excelFile->guessExtension();
+                $filePath = $this->getParameter('uploads_directory') . '/' . $newFilename;
 
                 try {
                     $excelFile->move(
@@ -39,6 +42,9 @@ final class RapportController extends AbstractController
                         $newFilename
                     );
                 } catch (FileException $e) {
+//                    if (file_exists($filePath)) {
+//                        unlink($filePath); // ⬅️ Supprimer le fichier uploadé
+//                    }
                     $this->addFlash('danger', 'Erreur lors de l\'enregistrement du fichier');
                     return $this->redirectToRoute('import_rapport');
                 }
@@ -47,7 +53,9 @@ final class RapportController extends AbstractController
                 $spreadsheet = IOFactory::load($this->getParameter('uploads_directory') . '/' . $newFilename);
                 $sheet = $spreadsheet->getActiveSheet();
 
-                foreach ($sheet->getRowIterator(2) as $row) { // ligne 1 = entêtes
+                $studentRepository = $em->getRepository(Etudiant::class);
+                $data = array();
+                foreach ($sheet->getRowIterator() as $row) { // ligne 1 = entêtes
                     $cellIterator = $row->getCellIterator();
                     $cellIterator->setIterateOnlyExistingCells(false);
 
@@ -56,23 +64,72 @@ final class RapportController extends AbstractController
                         $rowData[] = $cell->getValue();
                     }
 
-                    dd($rowData);
+                    // Verification si la premiere colonne et si on es a la seconde ligne
+                    if($rowData[0] == null and $row->getRowIndex() != 1)
+                        break;
 
-                    // Traiter chaque ligne ici
-                    // Exemple : créer un user à partir des données
-                    // $rowData = [email, password, first_name, ...]
+                    // Vérification si l'entête correspond bien a ce qui est attendu
+                    if(
+                        ($rowData[0] !== FileConstant::EXCEL_FILE_NUMERO->value and $row->getRowIndex() == 1) or
+                        ($rowData[1] !== FileConstant::EXCEL_FILE_MATRICULE->value and $row->getRowIndex() == 1) or
+                        ($rowData[2] !== FileConstant::EXCEL_FILE_NOM->value and $row->getRowIndex() == 1) or
+                        ($rowData[3] !== FileConstant::EXCEl_FILE_PRENOM->value and $row->getRowIndex() == 1)
+                    ){
+//                        if (file_exists($filePath)) {
+//                            unlink($filePath); // ⬅️ Supprimer le fichier uploadé
+//                        }
+                        $this->addFlash('warning', 'Ce fichier excel est invalide, veuillez le remplacer');
+                        return $this->redirectToRoute('import_rapport');
+                    }
+                    // Verifier si on est plus a la premiere ligne
+                    if( $row->getRowIndex() == 1 )
+                        continue;
+
+                    $matricule = trim($rowData[1]);
+                    $nom = $rowData[2];
+                    $prenom = $rowData[3];
+
+                    if( $studentRepository->findOneBy(['matricule' => $matricule]) != null ){
+//                        if (file_exists($filePath)) {
+//                            unlink($filePath); // ⬅️ Supprimer le fichier uploadé
+//                        }
+                        $this->addFlash('warning', 'Ce fichier contient un etudiant déja inscrit !');
+                        return $this->redirectToRoute('import_rapport');
+                    };
+
+
+                    if( preg_match('/^\d{12}$/', $matricule) === 0){
+//                        if (file_exists($filePath)) {
+//                            unlink($filePath); // ⬅️ Supprimer le fichier uploadé
+//                        }
+                        $this->addFlash('warning', "Ce fichier excel contient un matricule invalide. Matricule $matricule. Ligne : ${rowData[0]}");
+                        return $this->redirectToRoute('import_rapport');
+                    }
+
+                    $rowData = [$matricule, $nom, $prenom];
+                    $data[] = $rowData;
+                }
+                foreach ($data as $dt){
+                    $std = new Etudiant();
+                    $std->setMatricule($dt[0]);
+                    $std->setNom($dt[1]);
+                    $std->setPrenom($dt[2]);
+
+                    $em->persist($std);
+                    $em->flush();
                 }
 
+
                 // Sauvegarder un Rapport
-//                $rapport = new Rapport();
-//                $rapport->setFilename($newFilename);
-//                $rapport->setType($excelFile->getMimeType());
-//                $rapport->setCreatedAt(new \DateTimeImmutable());
-//                $rapport->setUpdatedAt(new \DateTimeImmutable());
-//                $rapport->setUser($security->getUser());
+                $rapport = new Rapport();
+                $rapport->setFilename($newFilename);
+                $rapport->setType($excelFile->getMimeType());
+                $rapport->setCreatedAt(new \DateTimeImmutable());
+                $rapport->setUpdatedAt(new \DateTimeImmutable());
+                $rapport->setUser($security->getUser());
 //
-//                $em->persist($rapport);
-//                $em->flush();
+                $em->persist($rapport);
+                $em->flush();
 
                 $this->addFlash('success', 'Rapport importé avec succès');
                 return $this->redirectToRoute('import_rapport');

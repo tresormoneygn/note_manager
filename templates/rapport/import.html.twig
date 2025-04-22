@@ -1,10 +1,23 @@
 {% extends 'base.html.twig' %}
 
 {% block body %}
-    <h1>Importer un rapport Excel</h1>
+    {{ include('partials/flush.html.twig') }}
 
-    {{ form_start(form) }}
-    {{ form_row(form.rapport) }}
-    <button class="btn btn-primary">Importer</button>
-    {{ form_end(form) }}
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Importer un rapport Excel</h1>
+
+    <div class="max-w-md mx-auto bg-white p-8 rounded-lg shadow-md">
+        {{ form_start(form) }}
+
+        <div class="mb-4">
+            {{ form_row(form.rapport, {
+                'attr': {'class': 'block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'}
+            }) }}
+        </div>
+
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md">
+            Importer
+        </button>
+
+        {{ form_end(form) }}
+    </div>
 {% endblock %}

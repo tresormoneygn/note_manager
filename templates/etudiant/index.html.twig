@@ -3,55 +3,98 @@
 {% block title %}Etudiant index{% endblock %}
 
 {% block body %}
-    <h1>Etudiant index</h1>
+    <div class="container mx-auto px-4 py-8">
+        {{ include('partials/flush.html.twig') }}
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Liste des Étudiants</h1>
 
-    <table class="table">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Matricule</th>
-                <th>Nom</th>
-                <th>Prenom</th>
-                <th>Date_naissance</th>
-                <th>Email</th>
-                <th>Numero</th>
-                <th>Addresse</th>
-                <th>Photo</th>
-                <th>Lieu_naissance</th>
-                <th>Pere</th>
-                <th>Mere</th>
-                <th>Nom_tuteur</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for etudiant in etudiants %}
-            <tr>
-                <td>{{ etudiant.id }}</td>
-                <td>{{ etudiant.matricule }}</td>
-                <td>{{ etudiant.nom }}</td>
-                <td>{{ etudiant.prenom }}</td>
-                <td>{{ etudiant.dateNaissance }}</td>
-                <td>{{ etudiant.email }}</td>
-                <td>{{ etudiant.numero }}</td>
-                <td>{{ etudiant.addresse }}</td>
-                <td>{{ etudiant.photo }}</td>
-                <td>{{ etudiant.lieuNaissance }}</td>
-                <td>{{ etudiant.pere }}</td>
-                <td>{{ etudiant.mere }}</td>
-                <td>{{ etudiant.nomTuteur }}</td>
-                <td>
-                    <a href="{{ path('app_etudiant_show', {'id': etudiant.id}) }}">show</a>
-                    <a href="{{ path('app_etudiant_edit', {'id': etudiant.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="14">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+        <div class="mb-4">
+            <a href="{{ path('app_etudiant_new') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded transition duration-200">
+                Créer un nouvel étudiant
+            </a>
+        </div>
 
-    <a href="{{ path('app_etudiant_new') }}">Create new</a>
+        <div class="overflow-x-auto bg-white rounded-lg shadow">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Matricule</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nom</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prénom</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date Naissance</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Téléphone</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200">
+                {% for etudiant in etudiants %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ etudiant.id }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ etudiant.matricule }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ etudiant.nom }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ etudiant.prenom }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ etudiant.dateNaissance|date('d/m/Y') }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ etudiant.email }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ etudiant.numero }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div class="flex space-x-2">
+                                <a href="{{ path('app_etudiant_show', {'id': etudiant.id}) }}" class="text-indigo-600 hover:text-indigo-900">Voir</a>
+                                <span class="text-gray-400">|</span>
+                                <a href="{{ path('app_etudiant_edit', {'id': etudiant.id}) }}" class="text-green-600 hover:text-green-900">Modifier</a>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="14" class="px-6 py-4 text-center text-sm text-gray-500">Aucun enregistrement trouvé</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Bouton qui ouvre le modal -->
+        <div class="mt-4 text-center">
+            <button class="bg-green-500 hover:bg-green-600 text-white font-medium py-2 px-4 rounded transition duration-200" id="openModal">
+                Importer un fichier excel
+            </button>
+        </div>
+
+        <!-- Modal -->
+        <div id="modal" class="fixed inset-0 bg-gray-500 bg-opacity-50 hidden flex justify-center items-center">
+            <div class="bg-white p-8 rounded-lg shadow-lg w-1/3">
+                <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Importer un rapport Excel</h1>
+
+                {{ form_start(form) }}
+                <div class="mb-4">
+                    {{ form_row(form.rapport, {
+                        'attr': {'class': 'block w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500'}
+                    }) }}
+                </div>
+
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-md">
+                    Importer
+                </button>
+                {{ form_end(form) }}
+
+                <button id="closeModal" class="mt-4 w-full bg-red-600 hover:bg-red-700 text-white font-semibold py-2 px-4 rounded-md">
+                    Fermer
+                </button>
+            </div>
+        </div>
+
+        <!-- Script pour ouvrir et fermer le modal -->
+        <script>
+            // Ouvrir le modal
+            document.getElementById('openModal').addEventListener('click', function() {
+                document.getElementById('modal').classList.remove('hidden');
+            });
+
+            // Fermer le modal
+            document.getElementById('closeModal').addEventListener('click', function() {
+                document.getElementById('modal').classList.add('hidden');
+            });
+        </script>
+    </div>
 {% endblock %}

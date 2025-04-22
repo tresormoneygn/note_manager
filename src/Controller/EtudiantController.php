@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Etudiant;
 use App\Form\EtudiantType;
+use App\Form\ImportRapportType;
 use App\Repository\EtudiantRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -17,8 +18,11 @@ final class EtudiantController extends AbstractController
     #[Route(name: 'app_etudiant_index', methods: ['GET'])]
     public function index(EtudiantRepository $etudiantRepository): Response
     {
+        $form = $this->createForm(ImportRapportType::class);
         return $this->render('etudiant/index.html.twig', [
             'etudiants' => $etudiantRepository->findAll(),
+            'active_page' => 'etudiant',
+            'form' => $form->createView(),
         ]);
     }
 
@@ -39,6 +43,7 @@ final class EtudiantController extends AbstractController
         return $this->render('etudiant/new.html.twig', [
             'etudiant' => $etudiant,
             'form' => $form,
+            'active_page' => 'etudiant'
         ]);
     }
 
@@ -47,6 +52,7 @@ final class EtudiantController extends AbstractController
     {
         return $this->render('etudiant/show.html.twig', [
             'etudiant' => $etudiant,
+            'active_page' => 'etudiant',
         ]);
     }
 
@@ -65,6 +71,7 @@ final class EtudiantController extends AbstractController
         return $this->render('etudiant/edit.html.twig', [
             'etudiant' => $etudiant,
             'form' => $form,
+            'active_page' => 'etudiant'
         ]);
     }
 

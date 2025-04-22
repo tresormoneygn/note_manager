@@ -3,49 +3,53 @@
 {% block title %}User index{% endblock %}
 
 {% block body %}
-    <h1>User index</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">User index</h1>
 
-    <table class="table">
-        <thead>
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-white rounded-lg shadow-md">
+            <thead class="bg-gray-100">
             <tr>
-                <th>Id</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>Password</th>
-                <th>First_name</th>
-                <th>Last_name</th>
-                <th>Date_naissance</th>
-                <th>Matricule</th>
-                <th>Numero</th>
-                <th>Addresse</th>
-                <th>actions</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Id</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Email</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Roles</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">First Name</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Last Name</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Date Naissance</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Matricule</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Numero</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Adresse</th>
+                <th class="py-3 px-4 text-left text-sm font-semibold text-gray-700">Actions</th>
             </tr>
-        </thead>
-        <tbody>
-        {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.roles ? user.roles|json_encode : '' }}</td>
-                <td>{{ user.password }}</td>
-                <td>{{ user.firstName }}</td>
-                <td>{{ user.lastName }}</td>
-                <td>{{ user.dateNaissance ? user.dateNaissance|date('Y-m-d') : '' }}</td>
-                <td>{{ user.matricule }}</td>
-                <td>{{ user.numero }}</td>
-                <td>{{ user.addresse }}</td>
-                <td>
-                    <a href="{{ path('app_user_show', {'id': user.id}) }}">show</a>
-                    <a href="{{ path('app_user_edit', {'id': user.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="11">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+            {% for user in users %}
+                <tr class="hover:bg-gray-50">
+                    <td class="py-4 px-4">{{ user.id }}</td>
+                    <td class="py-4 px-4">{{ user.email }}</td>
+                    <td class="py-4 px-4">{{ user.roles ? user.roles|json_encode : '' }}</td>
+                    <td class="py-4 px-4">{{ user.firstName }}</td>
+                    <td class="py-4 px-4">{{ user.lastName }}</td>
+                    <td class="py-4 px-4">{{ user.dateNaissance ? user.dateNaissance|date('Y-m-d') : '' }}</td>
+                    <td class="py-4 px-4">{{ user.matricule }}</td>
+                    <td class="py-4 px-4">{{ user.numero }}</td>
+                    <td class="py-4 px-4">{{ user.addresse }}</td>
+                    <td class="py-4 px-4 flex flex-col space-y-2">
+                        <a href="{{ path('app_user_show', {'id': user.id}) }}" class="text-blue-600 hover:underline">Show</a>
+                        <a href="{{ path('app_user_edit', {'id': user.id}) }}" class="text-yellow-500 hover:underline">Edit</a>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="11" class="py-4 px-6 text-center text-gray-500">No records found</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-    <a href="{{ path('app_user_new') }}">Create new</a>
+    <div class="mt-6 text-center">
+        <a href="{{ path('app_user_new') }}" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+            Create new
+        </a>
+    </div>
 {% endblock %}

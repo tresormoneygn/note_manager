@@ -1,4 +1,6 @@
 import './bootstrap.js';
+import Chart from 'chart.js/auto';
+
 /*
  * Welcome to your app's main JavaScript file!
  *

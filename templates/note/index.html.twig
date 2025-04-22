@@ -11,6 +11,46 @@
             <a href="{{ path('app_note_new') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
                 <i class="fas fa-plus-circle mr-2"></i> Nouvelle Note
             </a>
+
+        </div>
+        <div>
+            <h2 class="text-xl font-semibold mb-4">Filtrer les Notes</h2>
+                <div class="flex items gap-3>
+                    {{ form_start(form, {'method': 'get'}) }}
+                            <div class="flex gap-2 mb-2">
+                                <div class='py-2'>
+                                    {{ form_label(form.matricule) }}
+                                    {{ form_widget(form.matricule, {'attr': {'class': 'border border-black rounded-md'}}) }}
+                                </div>
+                                <div class='py-2'>
+                                    {{ form_label(form.nom) }}
+                                    {{ form_widget(form.nom, {'attr': {'class': 'border border-black rounded-md'}}) }}
+                                </div>
+                                <div class='py-2'>
+                                    {{ form_label(form.annee) }}
+                                    {{ form_widget(form.annee, {'attr': {'class': 'border border-black rounded-md'}}) }}
+                                </div>
+                               <div class="btn btn-secondary bg-red-500 text-white px-3 py-2 rounded-md">
+                                    {{ form_widget(form.filtrer) }}
+                                </div>
+                                {# Bouton de réinitialisation en tant que lien #}
+                                <a href="{{ path('app_note_index') }}" class="btn btn-secondary bg-red-500 text-white px-3 py-2 rounded-md">
+                                    Réinitialiser
+                                </a>
+                            </div>
+                    {{ form_end(form) }}
+
+                        {% if etudiants is defined %}
+                            <h2>Résultats</h2>
+                            <ul>
+                                {% for etudiant in etudiants %}
+                                    <li>{{ etudiant.matricule }} - {{ etudiant.nom }} - {{ etudiant.annee }}</li>
+                                {% else %}
+                                    <li>Aucun résultat trouvé.</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                </div>
         </div>
 
         <div class="bg-white shadow-md rounded-lg overflow-hidden">
@@ -72,6 +112,47 @@
                     </tbody>
                 </table>
             </div>
+        </div>
+
+
+        {# Statitique des notes #}
+        <div class="bg-white shadow-md rounded-lg overflow-hidden mt-5 p-4">
+            {# Diagramme #}
+            <h2 class="text-xl font-semibold mb-4 mt-4">Statistiques des Notes</h2>
+            <p class="text-gray-600 mb-4">Répartition des notes par valeur</p>
+            <canvas id="noteChart" width="300" height="300"></canvas>
+            <script>
+                var ctx = document.getElementById('noteChart').getContext('2d');
+
+                var noteChart = new Chart(ctx, {
+                    type: 'pie', // Ou 'doughnut' pour un diagramme en donut
+                    data: {
+                        labels: ['A', 'B', 'C'], // Les labels des catégories
+                        datasets: [{
+                            label: 'Répartition des notes',
+                            data: [300, 150, 100], // Les données des catégories
+                            backgroundColor: ['#ff9999', '#66b3ff', '#99ff99'],
+                            borderColor: ['#fff', '#fff', '#fff', '#fff', '#fff'],
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(tooltipItem) {
+                                        return tooltipItem.label + ': ' + tooltipItem.raw + ' notes';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            </script>
         </div>
     </div>
 {% endblock %}

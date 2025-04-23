@@ -281,6 +281,11 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
         return $this;
     }
+    public function getUsername(): string
+{
+    // tu peux retourner l’email ou le prénom ou ce que tu veux afficher comme nom de connexion
+    return $this->getFirstName(); // ou return $this->first_name . ' ' . $this->last_name;
+}
 
     /**
      * @return Collection<int, Rapport>

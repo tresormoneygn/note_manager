@@ -11,8 +11,10 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/fonction')]
+#[IsGranted('IS_AUTHENTICATED')]
 final class FonctionController extends AbstractController
 {
     #[Route(name: 'app_fonction_index', methods: ['GET'])]
@@ -24,6 +26,7 @@ final class FonctionController extends AbstractController
     }
 
     #[Route('/new', name: 'app_fonction_new', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $fonction = new Fonction();
@@ -71,6 +74,7 @@ final class FonctionController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_fonction_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Fonction $fonction, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$fonction->getId(), $request->getPayload()->getString('_token'))) {

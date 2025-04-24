@@ -18,11 +18,13 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\String\Slugger\SluggerInterface;
-
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/rapport')]
-final class RapportController extends AbstractController
+#[IsGranted('IS_AUTHENTICATED')]
+class RapportController extends AbstractController
 {
     #[Route('/import-rapport', name: 'import_rapport')]
+    #[IsGranted('ROLE_ADMIN')]
     public function import(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, Security $security): Response
     {
         $form = $this->createForm(ImportRapportType::class);
@@ -203,6 +205,7 @@ final class RapportController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_rapport_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Rapport $rapport, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$rapport->getId(), $request->getPayload()->getString('_token'))) {

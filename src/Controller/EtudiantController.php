@@ -12,9 +12,11 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/etudiant')]
-final class EtudiantController extends AbstractController
+#[IsGranted('IS_AUTHENTICATED')]
+class EtudiantController extends AbstractController
 {
     #[Route(name: 'app_etudiant_index', methods: ['GET'])]
     public function index(
@@ -66,6 +68,7 @@ final class EtudiantController extends AbstractController
     }
 
     #[Route('/new', name: 'app_etudiant_new', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $etudiant = new Etudiant();
@@ -96,6 +99,7 @@ final class EtudiantController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_etudiant_edit', methods: ['GET', 'POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function edit(Request $request, Etudiant $etudiant, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(EtudiantType::class, $etudiant);
@@ -115,6 +119,7 @@ final class EtudiantController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_etudiant_delete', methods: ['POST'])]
+    #[IsGranted('ROLE_ADMIN')]
     public function delete(Request $request, Etudiant $etudiant, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$etudiant->getId(), $request->getPayload()->getString('_token'))) {

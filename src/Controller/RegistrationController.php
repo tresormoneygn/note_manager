@@ -19,6 +19,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
+#[IsGranted('ROLE_ADMIN')]
 class RegistrationController extends AbstractController
 {
     public function __construct(private EmailVerifier $emailVerifier)

@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 
 final class HomeController extends AbstractController
 {
-    #[Route('', name: 'app_home', methods: ['GET'])]
+    #[Route('', name: 'app_index', methods: ['GET'])]
     public function index(): Response
     {
         return $this->render('home/index.html.twig', [
@@ -22,7 +22,7 @@ final class HomeController extends AbstractController
         ]);
     }
 
-    #[Route('home', name: 'app_index', methods: ['GET'])]
+    #[Route('home', name: 'app_home', methods: ['GET'])]
     public function home(InscriptionRepository $inscriptionRepository, AnneeRepository $anneeRepository): Response
     {
         $annee = $anneeRepository->findOneBy(['is_progress' => true]);
@@ -33,4 +33,6 @@ final class HomeController extends AbstractController
             'student_count' => $nb_students
         ]);
     }
+
+    
 }

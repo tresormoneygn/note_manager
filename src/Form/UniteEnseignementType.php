@@ -19,11 +19,11 @@ class UniteEnseignementType extends AbstractType
             ->add('coefficient')
             ->add('programme', EntityType::class, [
                 'class' => Programme::class,
-                'choice_label' => 'id',
+                'choice_label' => 'name',
             ])
             ->add('semestre', EntityType::class, [
                 'class' => Semestre::class,
-                'choice_label' => 'id',
+                'choice_label' => 'name',
             ])
         ;
     }

@@ -2,6 +2,8 @@
 namespace App\Form;
 
 use App\Constant\FormConstant;
+use App\Entity\Matiere;
+use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -28,6 +30,13 @@ class ImportRapportType extends AbstractType
                 'attr' => [
                     'class' => FormConstant::SELECT_TYPE_CLASS->value,
                 ]
+            ])
+            ->add('matiere', EntityType::class, [
+                'class' => Matiere::class,
+                'choice_label' => 'name',
+                'required' => false,
+                'placeholder' => '-- Choisir une matière --',
+                'label' => 'Matière'
             ]);
     }
 }

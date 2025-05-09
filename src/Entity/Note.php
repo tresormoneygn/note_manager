@@ -36,8 +36,20 @@ class Note
     #[ORM\Column]
     private ?\DateTimeImmutable $updated_at = null;
 
-    #[ORM\Column(type: Types::DATETIME_MUTABLE)]
+    #[ORM\Column(type: Types::DATETIME_MUTABLE, nullable: true)]
     private ?\DateTimeInterface $max_delay = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?float $moyenne = null;
+
+    public function __construct()
+    {
+        $this->created_at = new \DateTimeImmutable();
+        $this->updated_at = new \DateTimeImmutable();
+        $this->max_delay = null;
+        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
+        $this->setMoyenne($moyenne);
+    }
 
     public function getId(): ?int
     {
@@ -52,7 +64,8 @@ class Note
     public function setNote1(float $note_1): static
     {
         $this->note_1 = $note_1;
-
+        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
+        $this->setMoyenne($moyenne);
         return $this;
     }
 
@@ -64,7 +77,8 @@ class Note
     public function setNote2(float $note_2): static
     {
         $this->note_2 = $note_2;
-
+        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
+        $this->setMoyenne($moyenne);
         return $this;
     }
 
@@ -76,7 +90,8 @@ class Note
     public function setNote3(float $note_3): static
     {
         $this->note_3 = $note_3;
-
+        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
+        $this->setMoyenne($moyenne);
         return $this;
     }
 
@@ -136,6 +151,18 @@ class Note
     public function setMaxDelay(\DateTimeInterface $max_delay): static
     {
         $this->max_delay = $max_delay;
+
+        return $this;
+    }
+
+    public function getMoyenne(): ?float
+    {
+        return $this->moyenne;
+    }
+
+    public function setMoyenne(?float $moyenne): static
+    {
+        $this->moyenne = $moyenne;
 
         return $this;
     }

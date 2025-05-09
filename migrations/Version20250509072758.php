@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250414234547 extends AbstractMigration
+final class Version20250509072758 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -21,7 +21,7 @@ final class Version20250414234547 extends AbstractMigration
     {
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql(<<<'SQL'
-            ALTER TABLE fonction ADD label VARCHAR(15) NOT NULL
+            ALTER TABLE note ADD moyenne DOUBLE PRECISION DEFAULT NULL
         SQL);
     }
 
@@ -29,7 +29,7 @@ final class Version20250414234547 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql(<<<'SQL'
-            ALTER TABLE fonction DROP label
+            ALTER TABLE note DROP moyenne
         SQL);
     }
 }

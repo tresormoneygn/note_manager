@@ -6,16 +6,86 @@
 
 {% block body %}
     <div class="container mx-auto px-4 py-6">
+        {{ include('partials/flush.html.twig') }}
         <div class="flex justify-between items-center mb-6">
             <h1 class="text-2xl font-bold text-gray-800">Liste des Notes</h1>
-            <a href="{{ path('app_note_new') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
-                <i class="fas fa-plus-circle mr-2"></i> Nouvelle Note
-            </a>
+
+            <div class="flex gap-2">
+                <button class="btn btn-secondary bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center" onclick="document.getElementById('uploadModal').classList.remove('hidden')">
+                    <i class="fas fa-upload mr-2"></i> Importer les notes
+                </button>
+
+                <a href="{{ path('app_note_new') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
+                    <i class="fas fa-plus-circle mr-2"></i> Nouvelle Note
+                </a>
+            </div>
+
+            <!-- Modal Upload (initialement caché) -->
+            <div id="uploadModal" class="fixed inset-0 bg-gray-800 bg-opacity-50 items-center flex justify-center z-50 hidden">
+                <div class="bg-white rounded-lg shadow-lg w-full max-w-md">
+                    <form method="POST" action="{{ path('app_note_import') }}" enctype="multipart/form-data">
+                        <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+                            <h3 class="text-lg font-semibold">Importer les notes</h3>
+                            <button type="button" onclick="document.getElementById('uploadModal').classList.add('hidden')" class="text-gray-500 hover:text-gray-700 text-xl">&times;</button>
+                        </div>
+
+                        <!-- AVERTISSEMENT -->
+                        <div class="px-6 pt-4 pb-0">
+                            <div class="bg-yellow-100 text-yellow-800 text-sm p-3 rounded border border-yellow-300">
+                                ⚠️ Cette opération <strong>écrasera les anciennes notes</strong> des étudiants pour la matière sélectionnée.
+                                Veuillez vérifier votre fichier avant de continuer.
+                            </div>
+                        </div>
+
+                        <div class="p-6">
+                            <label for="matiere_select" class="block mb-2 text-sm font-medium text-gray-700">Sélectionner une matière</label>
+                            <select name="matiere_id" id="matiere_select" required class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2">
+                                <option value="" disabled selected>-- Choisir une matière --</option>
+                                {% for matiere in matieres %}
+                                    <option value="{{ matiere.id }}">{{ matiere.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="p-6">
+                            <label class="block mb-2 text-sm font-medium text-gray-700">Fichier Excel (.xlsx)</label>
+                            <input type="file" name="excel_file" accept=".xlsx" required class="w-full text-sm text-gray-700 border border-gray-300 rounded p-2">
+                        </div>
+
+                        <div class="px-6 py-4 border-t border-gray-200 flex justify-end">
+                            <button type="submit" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">Importer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+
+
+            <!-- Modal Tailwind -->
+            {# <div id="uploadModal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+            <div class="bg-gray-900 bg-opacity-50 absolute inset-0"></div>
+            <div class="bg-white rounded-lg shadow-lg w-96">
+                <div class="flex justify-between items-center p-4 border-b">
+                <h5 class="text-lg font-semibold">Importer un fichier Excel</h5>
+                <button type="button" class="text-gray-500 hover:text-gray-800" id="closeModal" aria-label="Fermer">
+                    &times;
+                </button>
+                </div>
+                <div class="p-4">
+                {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+                    <div class="mb-4">
+                    {{ form_row(form.fichier) }}
+                    </div>
+                    <button type="submit" class="w-full py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none">Importer</button>
+                {{ form_end(form) }}
+                </div>
+            </div>
+            </div> #}
 
         </div>
         <div>
             <h2 class="text-xl font-semibold mb-4">Filtrer les Notes</h2>
-                <div class="flex items gap-3>
+                <div class="flex items gap-3">
                     {{ form_start(form, {'method': 'get'}) }}
                             <div class="flex gap-2 mb-2">
                                 <div class='py-2'>
@@ -30,7 +100,11 @@
                                     {{ form_label(form.annee) }}
                                     {{ form_widget(form.annee, {'attr': {'class': 'border border-black rounded-md'}}) }}
                                 </div>
-                               <div class="btn btn-secondary bg-red-500 text-white px-3 py-2 rounded-md">
+                                <div class='py-2'>
+                                    {{ form_label(form.matiere) }}
+                                    {{ form_widget(form.matiere, {'attr': {'class': 'border border-black rounded-md'}}) }}
+                                </div>
+                                <div class="btn btn-secondary bg-red-500 text-white px-3 py-2 rounded-md">
                                     {{ form_widget(form.filtrer) }}
                                 </div>
                                 {# Bouton de réinitialisation en tant que lien #}

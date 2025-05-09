@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250414232454 extends AbstractMigration
+final class Version20250505155314 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -21,7 +21,13 @@ final class Version20250414232454 extends AbstractMigration
     {
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql(<<<'SQL'
-            CREATE TABLE user (id INT AUTO_INCREMENT NOT NULL, email VARCHAR(180) NOT NULL, roles JSON NOT NULL, password VARCHAR(255) NOT NULL, UNIQUE INDEX UNIQ_IDENTIFIER_EMAIL (email), PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
+            ALTER TABLE matiere ADD user_id INT NOT NULL
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE matiere ADD CONSTRAINT FK_9014574AA76ED395 FOREIGN KEY (user_id) REFERENCES user (id)
+        SQL);
+        $this->addSql(<<<'SQL'
+            CREATE INDEX IDX_9014574AA76ED395 ON matiere (user_id)
         SQL);
     }
 
@@ -29,7 +35,13 @@ final class Version20250414232454 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql(<<<'SQL'
-            DROP TABLE user
+            ALTER TABLE matiere DROP FOREIGN KEY FK_9014574AA76ED395
+        SQL);
+        $this->addSql(<<<'SQL'
+            DROP INDEX IDX_9014574AA76ED395 ON matiere
+        SQL);
+        $this->addSql(<<<'SQL'
+            ALTER TABLE matiere DROP user_id
         SQL);
     }
 }

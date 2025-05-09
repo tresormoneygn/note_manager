@@ -33,6 +33,7 @@ final class UniteEnseignementController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $uniteEnseignement->setLabel('');
             $entityManager->persist($uniteEnseignement);
             $entityManager->flush();
 

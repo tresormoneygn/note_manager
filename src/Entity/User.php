@@ -81,11 +81,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\JoinColumn(nullable: true)]
     private ?Programme $programme = null;
 
+    /**
+     * @var Collection<int, Matiere>
+     */
+    #[ORM\OneToMany(targetEntity: Matiere::class, mappedBy: 'user')]
+    private Collection $matieres;
+
     public function __construct()
     {
         $this->fonctions = new ArrayCollection();
         $this->rapports = new ArrayCollection();
         $this->departementHistoriques = new ArrayCollection();
+        $this->matieres = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -355,6 +362,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setProgramme(?Programme $programme): static
     {
         $this->programme = $programme;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Matiere>
+     */
+    public function getMatieres(): Collection
+    {
+        return $this->matieres;
+    }
+
+    public function addMatiere(Matiere $matiere): static
+    {
+        if (!$this->matieres->contains($matiere)) {
+            $this->matieres->add($matiere);
+            $matiere->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMatiere(Matiere $matiere): static
+    {
+        if ($this->matieres->removeElement($matiere)) {
+            // set the owning side to null (unless already changed)
+            if ($matiere->getUser() === $this) {
+                $matiere->setUser(null);
+            }
+        }
 
         return $this;
     }

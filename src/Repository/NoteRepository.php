@@ -48,38 +48,39 @@ class NoteRepository extends ServiceEntityRepository
      * @param string|null $annee
      * @return Note[]
      */
-    
 
-    public function filtrerNote(?string $matricule, ?string $nom, ?string $annee): array
+
+    public function filtrerNote(?string $matricule, ?string $nom, ?string $annee, $matiere): array
     {
         $qb = $this->createQueryBuilder('n')
-            ->join('n.student', 's') // adapte le nom de la relation si nécessaire
-            ->addSelect('s');
+            ->join('n.student', 's') // adapte le nom si nécessaire
+            ->addSelect('s')
+            ->join('n.matiere', 'm') // jointure avec la matière
+            ->addSelect('m');
 
         if (!empty($matricule)) {
             $qb->andWhere('s.matricule LIKE :matricule')
-            ->setParameter('matricule', '%' . $matricule . '%');
+                ->setParameter('matricule', '%' . $matricule . '%');
         }
 
         if (!empty($nom)) {
             $qb->andWhere('s.nom LIKE :nom')
-            ->setParameter('nom', '%' . $nom . '%');
+                ->setParameter('nom', '%' . $nom . '%');
         }
 
-        if ($annee) {
+        if (!empty($annee)) {
             $debut = new \DateTime("$annee-01-01 00:00:00");
             $fin = new \DateTime(($annee + 1) . "-01-01 00:00:00");
-        
-            $qb->andWhere('n.created_at >= :debut')
-               ->andWhere('n.created_at < :fin')
-               ->setParameter('debut', $debut)
-               ->setParameter('fin', $fin);
-        }
-        
 
+            $qb->andWhere('n.created_at >= :debut')
+                ->andWhere('n.created_at < :fin')
+                ->setParameter('debut', $debut)
+                ->setParameter('fin', $fin);
+        }
+        if (!empty($matiere)) {
+            $qb->andWhere('n.matiere = :matiere')
+                ->setParameter('matiere', $matiere);
+        }
         return $qb->getQuery()->getResult();
     }
-
-
-
 }

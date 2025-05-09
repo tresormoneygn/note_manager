@@ -10,7 +10,7 @@ use Doctrine\Migrations\AbstractMigration;
 /**
  * Auto-generated Migration: Please modify to your needs!
  */
-final class Version20250414231950 extends AbstractMigration
+final class Version20250505170952 extends AbstractMigration
 {
     public function getDescription(): string
     {
@@ -21,7 +21,7 @@ final class Version20250414231950 extends AbstractMigration
     {
         // this up() migration is auto-generated, please modify it to your needs
         $this->addSql(<<<'SQL'
-            CREATE TABLE fonction (id INT AUTO_INCREMENT NOT NULL, name VARCHAR(50) NOT NULL, PRIMARY KEY(id)) DEFAULT CHARACTER SET utf8mb4 COLLATE `utf8mb4_unicode_ci` ENGINE = InnoDB
+            ALTER TABLE note CHANGE max_delay max_delay DATETIME DEFAULT NULL
         SQL);
     }
 
@@ -29,7 +29,7 @@ final class Version20250414231950 extends AbstractMigration
     {
         // this down() migration is auto-generated, please modify it to your needs
         $this->addSql(<<<'SQL'
-            DROP TABLE fonction
+            ALTER TABLE note CHANGE max_delay max_delay DATETIME NOT NULL
         SQL);
     }
 }

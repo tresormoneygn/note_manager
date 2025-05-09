@@ -28,7 +28,7 @@ class ProgrammeController extends AbstractController
 
     #[Route('/new', name: 'app_programme_new', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ProgrammeRepository $programmeRepository): Response
     {
         $programme = new Programme();
         $form = $this->createForm(ProgrammeType::class, $programme);
@@ -83,7 +83,7 @@ class ProgrammeController extends AbstractController
 
     #[Route('/{id}/edit', name: 'app_programme_edit', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function edit(Request $request, Programme $programme): Response
+    public function edit(Request $request, Programme $programme, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(ProgrammeType::class, $programme);
         $form->handleRequest($request);
@@ -102,7 +102,7 @@ class ProgrammeController extends AbstractController
 
     #[Route('/{id}', name: 'app_programme_delete', methods: ['POST'])]
     #[IsGranted('ROLE_ADMIN')]
-    public function delete(Request $request, Programme $programme): Response
+    public function delete(Request $request, Programme $programme, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$programme->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($programme);

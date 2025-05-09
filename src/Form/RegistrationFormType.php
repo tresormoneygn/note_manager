@@ -36,10 +36,13 @@ class RegistrationFormType extends AbstractType
                 'expanded' => true,
                 'multiple' => false,
                 'required' => true,
-                'attr' => ['class' => 'mb-3']
+                'attr' => ['class' => 'flex gap-4 mb-3']
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Email',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez entrer votre email']),
                     new Email(['message' => 'Veuillez entrer un email valide']),
@@ -47,12 +50,18 @@ class RegistrationFormType extends AbstractType
             ])
             ->add('first_name', TextType::class, [
                 'label' => 'Prénom',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez entrer votre prénom']),
                 ],
             ])
             ->add('last_name', TextType::class, [
                 'label' => 'Nom',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez entrer votre nom']),
                 ],
@@ -60,6 +69,9 @@ class RegistrationFormType extends AbstractType
             ->add('date_naissance', DateType::class, [
                 'label' => 'Date de naissance',
                 'widget' => 'single_text',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez entrer votre date de naissance']),
                 ],
@@ -68,17 +80,42 @@ class RegistrationFormType extends AbstractType
                 'label' => 'Matricule / ID',
                 'required' => false,
                 'help' => 'Identifiant unique pour le personnel (facultatif)',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
             ])
             ->add('numero', TextType::class, [
                 'label' => 'Numéro de téléphone',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez entrer votre numéro de téléphone']),
                 ],
             ])
             ->add('addresse', TextType::class, [
                 'label' => 'Adresse',
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank(['message' => 'Veuillez entrer votre adresse']),
+                ],
+            ])
+            ->add('plainPassword', PasswordType::class, [
+                'mapped' => false,
+                'label' => 'Mot de passe',
+                'attr' => [
+                    'autocomplete' => 'new-password',
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm placeholder-gray-400 focus:border-blue-500 focus:ring-blue-500'
+                ],
+                'constraints' => [
+                    new NotBlank(['message' => 'Veuillez entrer un mot de passe']),
+                    new Length([
+                        'min' => 6,
+                        'minMessage' => 'Votre mot de passe doit contenir au moins {{ limit }} caractères',
+                        'max' => 4096,
+                    ]),
                 ],
             ])
             ->add('programme', EntityType::class, [
@@ -86,8 +123,11 @@ class RegistrationFormType extends AbstractType
                 'choice_label' => 'name',
                 'placeholder' => 'Sélectionnez votre programme',
                 'required' => false,
+                'attr' => [
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+                ]
             ])
-            ->add('agreeTerms', CheckboxType::class, [
+        ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
                 'label' => 'J\'accepte les conditions d\'utilisation',
                 'constraints' => [
@@ -95,7 +135,8 @@ class RegistrationFormType extends AbstractType
                         'message' => 'Vous devez accepter nos conditions d\'utilisation.',
                     ]),
                 ],
-            ])
+            'attr' => ['class' => 'rounded text-blue-600 focus:ring-blue-500']
+        ])
             ->add('plainPassword', PasswordType::class, [
                 // instead of being set onto the object directly,
                 // this is read and encoded in the controller

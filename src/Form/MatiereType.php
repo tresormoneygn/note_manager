@@ -18,7 +18,7 @@ class MatiereType extends AbstractType
             ->add('coefficient')
             ->add('uniteEnseignement', EntityType::class, [
                 'class' => UniteEnseignement::class,
-                'choice_label' => 'id',
+                'choice_label' => 'nom',
             ])
         ;
     }

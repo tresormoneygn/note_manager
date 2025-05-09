@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Constant\FileConstant;
 use App\Constant\xtnsionConstant;
 use App\Entity\Etudiant;
+use App\Entity\Note;
 use App\Entity\Rapport;
 use App\Form\ImportRapportType;
 use App\Form\RapportType;
@@ -33,12 +34,14 @@ class RapportController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $excelFile = $form->get('rapport')->getData();
+            $matiere = $form->get('matiere')->getData();
+
             $newFilename = '';
             if ($excelFile) {
                 // Vérification que le fichier est bien uploadé
                 if (!$excelFile->isValid()) {
                     $this->addFlash('danger', 'Erreur lors de l\'upload du fichier');
-                    return $this->redirectToRoute('import_rapport');
+                    return $this->redirectToRoute('app_etudiant_index');
                 }
                 $originalFilename = pathinfo($excelFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
@@ -50,7 +53,7 @@ class RapportController extends AbstractController
                 if (!file_exists($uploadDir)) {
                     if (!mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
                         $this->addFlash('danger', 'Impossible de créer le répertoire d\'upload');
-                        return $this->redirectToRoute('import_rapport');
+                        return $this->redirectToRoute('app_etudiant_index');
                     }
                 }
 
@@ -87,7 +90,7 @@ class RapportController extends AbstractController
                         ($rowData[3] !== FileConstant::EXCEl_FILE_PRENOM->value and $row->getRowIndex() == 1)
                     ){
                         $this->addFlash('warning', 'Ce fichier excel est invalide, veuillez le remplacer');
-                        return $this->redirectToRoute('import_rapport');
+                        return $this->redirectToRoute('app_etudiant_index');
                     }
 
 
@@ -106,13 +109,13 @@ class RapportController extends AbstractController
 
                     if( $studentRepository->findOneBy(['matricule' => $matricule]) != null ){
                         $this->addFlash('warning', 'Ce fichier contient un etudiant déja inscrit !');
-                        return $this->redirectToRoute('import_rapport');
+                        return $this->redirectToRoute('app_etudiant_index');
                     };
 
 
                     if( preg_match('/^\d{12}$/', $matricule) === 0){
                         $this->addFlash('warning', "Ce fichier excel contient un matricule invalide. Matricule $matricule. Ligne : {$rowData[0]}");
-                        return $this->redirectToRoute('import_rapport');
+                        return $this->redirectToRoute('app_etudiant_index');
                     }
 
                     $rowData = [$matricule, $nom, $prenom];
@@ -124,8 +127,16 @@ class RapportController extends AbstractController
                     $std->setMatricule($dt[0]);
                     $std->setNom($dt[1]);
                     $std->setPrenom($dt[2]);
-
                     $em->persist($std);
+                    $em->flush();
+
+                    $note = new Note();
+                    $note->setMatiere($matiere);
+                    $note->setStudent($std);
+                    $note->setNote1(0);
+                    $note->setNote2(0);
+                    $note->setNote3(0);
+                    $em->persist($note);
                     $em->flush();
                 }
 
@@ -134,6 +145,7 @@ class RapportController extends AbstractController
                 $rapport->setFilename($newFilename);
                 $rapport->setType(xtnsionConstant::EXCEL_FILE_XTNSION->value);
                 $rapport->setCreatedAt(new \DateTimeImmutable());
+
                 $rapport->setUpdatedAt(new \DateTimeImmutable());
                 $rapport->setUser($security->getUser());
 
@@ -141,7 +153,7 @@ class RapportController extends AbstractController
                 $em->flush();
 
                 $this->addFlash('success', 'Rapport importé avec succès');
-                return $this->redirectToRoute('import_rapport');
+                return $this->redirectToRoute('app_etudiant_index');
             }
         }
 

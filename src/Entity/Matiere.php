@@ -31,6 +31,10 @@ class Matiere
     #[ORM\OneToMany(targetEntity: Note::class, mappedBy: 'matiere')]
     private Collection $notes;
 
+    #[ORM\ManyToOne(inversedBy: 'matieres')]
+    #[ORM\JoinColumn(nullable: false)]
+    private ?User $user = null;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
@@ -103,6 +107,18 @@ class Matiere
                 $note->setMatiere(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getUser(): ?User
+    {
+        return $this->user;
+    }
+
+    public function setUser(?User $user): static
+    {
+        $this->user = $user;
 
         return $this;
     }

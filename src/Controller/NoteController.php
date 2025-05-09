@@ -2,25 +2,35 @@
 
 namespace App\Controller;
 
+use App\Constant\FileConstant;
+use App\Constant\xtnsionConstant;
+use App\Entity\Etudiant;
+use App\Entity\Matiere;
 use App\Entity\Note;
+use App\Entity\Rapport;
 use App\Form\NoteType;
 use App\Repository\NoteRepository;
 use App\Form\FiltreNoteType;
 use Doctrine\ORM\EntityManagerInterface;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use Symfony\Component\Security\Http\Attribute\Security;
+use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/note')]
 #[IsGranted('ROLE_TEACHER')]
 final class NoteController extends AbstractController
 {
     #[Route(name: 'app_note_index', methods: ['GET'])]
-    public function index(Request $request, NoteRepository $noteRepository): Response
+    public function index(Request $request, NoteRepository $noteRepository, Security $security): Response
     {
+        // Récupération de l'utilisateur connecté
         $form = $this->createForm(FiltreNoteType::class, null, [
             'method' => 'GET'
         ]);
@@ -34,8 +44,9 @@ final class NoteController extends AbstractController
             $matricule = $data['matricule'] ?? null;
             $nom = $data['nom'] ?? null;
             $annee = $data['annee'] ?? null;
+            $matiere = $data['matiere'] ?? null;
 
-            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee);
+            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee, $matiere);
             // Calculer les statistiques des notes
             $noteData = $this->calculateNoteStatistics($notes);
         } else {
@@ -45,17 +56,9 @@ final class NoteController extends AbstractController
         return $this->render('note/index.html.twig', [
             'form' => $form->createView(),
             'notes' => $notes,
-            'noteData' => $noteData, // Passer les données au template
+            'noteData' => $noteData,
+            'matieres' => $security->getUser()->getMatieres(),
         ]);
-
-        // return $this->render('note/index.html.twig', [
-        //     'form' => $form->createView(),
-        //     'notes' => $noteRepository->findAll(),
-        // ]);
-
-
-
-        
     }
 
 
@@ -65,13 +68,14 @@ final class NoteController extends AbstractController
         $noteData = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
 
         foreach ($notes as $note) {
-            if ($note->getValue() >= 9) {
+            $moyenne = $note->getMoyenne();
+            if ($moyenne >= 9) {
                 $noteData['A']++;
-            } elseif ($note->getValue() >= 8) {
+            } elseif ($moyenne >= 8) {
                 $noteData['B']++;
-            } elseif ($note->getValue() >= 7) {
+            } elseif ($moyenne >= 7) {
                 $noteData['C']++;
-            } elseif ($note->getValue() >= 6) {
+            } elseif ($moyenne >= 6) {
                 $noteData['D']++;
             } else {
                 $noteData['E']++;
@@ -141,6 +145,156 @@ final class NoteController extends AbstractController
         return $this->redirectToRoute('app_note_index', [], Response::HTTP_SEE_OTHER);
     }
 
+    #[Route('/import/note', name: 'app_note_import', methods: ['POST'])]
+    public function import(Request $request, EntityManagerInterface $em, SluggerInterface $slugger): RedirectResponse
+    {
+        $excelFile = $request->files->get('excel_file');
+        $matiereId = $request->request->get('matiere_id');
+
+        if (!$excelFile) {
+            $this->addFlash('error', 'Fichier manquant.');
+            return $this->redirectToRoute('app_note_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        if (!$matiereId) {
+            $this->addFlash('error', 'Aucune matière sélectionnée.');
+            return $this->redirectToRoute('app_note_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+        // Tu peux aussi récupérer l'entité matière si nécessaire :
+        $matiere = $em->getRepository(Matiere::class)->find($matiereId);
+
+        if (!$matiere) {
+            $this->addFlash('error', 'Matière introuvable.');
+            return $this->redirectToRoute('app_note_index', [], Response::HTTP_SEE_OTHER);
+        }
+
+
+        $newFilename = '';
+        if ($excelFile) {
+            // Vérification que le fichier est bien uploadé
+            if (!$excelFile->isValid()) {
+                $this->addFlash('danger', 'Erreur lors de l\'upload du fichier');
+                return $this->redirectToRoute('app_etudiant_index');
+            }
+            $originalFilename = pathinfo($excelFile->getClientOriginalName(), PATHINFO_FILENAME);
+            $safeFilename = $slugger->slug($originalFilename);
+            $newFilename = $safeFilename.'-'.uniqid().'.'.$excelFile->guessExtension();
+            $uploadDir = $this->getParameter('uploads_directory');
+            $filePath = $uploadDir . '/' . $newFilename;
+
+            // Création du répertoire s'il n'existe pas
+            if (!file_exists($uploadDir)) {
+                if (!mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+                    $this->addFlash('danger', 'Impossible de créer le répertoire d\'upload');
+                    return $this->redirectToRoute('app_etudiant_index');
+                }
+            }
+
+            try {
+                $excelFile->move(
+                    $uploadDir,
+                    $newFilename
+                );
+            } catch (FileException $e) {
+                $this->addFlash('danger', 'Erreur lors de l\'enregistrement du fichier');
+                return $this->redirectToRoute('import_rapport');
+            }
+
+            // Lecture du fichier Excel
+            $spreadsheet = IOFactory::load($this->getParameter('uploads_directory') . '/' . $newFilename);
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $studentRepository = $em->getRepository(Etudiant::class);
+            $data = array();
+            foreach ($sheet->getRowIterator() as $row) { // ligne 1 = entêtes
+                $cellIterator = $row->getCellIterator();
+                $cellIterator->setIterateOnlyExistingCells(false);
+
+                $rowData = [];
+                foreach ($cellIterator as $cell) {
+                    $rowData[] = $cell->getValue();
+                }
+
+                // Vérification si l'entête correspond bien a ce qui est attendu
+                if(
+                    ($rowData[0] !== FileConstant::EXCEL_FILE_NUMERO->value and $row->getRowIndex() == 1) or
+                    ($rowData[1] !== FileConstant::EXCEL_FILE_MATRICULE->value and $row->getRowIndex() == 1) or
+                    ($rowData[2] !== FileConstant::EXCEL_FILE_NOM->value and $row->getRowIndex() == 1) or
+                    ($rowData[3] !== FileConstant::EXCEl_FILE_PRENOM->value and $row->getRowIndex() == 1)
+                ){
+                    $this->addFlash('warning', 'Ce fichier excel est invalide, veuillez le remplacer');
+                    return $this->redirectToRoute('app_note_index');
+                }
+
+
+                // Verifier si on est plus a la premiere ligne
+                if( $row->getRowIndex() == 1 )
+                    continue;
+
+                $nb = $rowData[0];
+                $matricule = trim($rowData[1]);
+                $student = null;
+                $note1 = $rowData[4];
+                $note2 = $rowData[5];
+                $note3 = $rowData[6];
+                $notes = [$note1, $note2, $note3];
+
+                if( $nb === null) {
+                    break;
+                }
+
+                if( ($student = $studentRepository->findOneBy(['matricule' => $matricule])) == null ){
+                    $this->addFlash('warning', 'Ce fichier contient un etudiant non inscrit !');
+                    return $this->redirectToRoute('app_note_index');
+                };
+
+                if( $em->getRepository(Note::class)->findOneBy(['student' => $student, 'matiere' => $matiere]) == null ){
+                    $this->addFlash('warning', 'Ce fichier contient un etudiant n\'ayant pas été enregistré!');
+                    return $this->redirectToRoute('app_note_index');
+                }
+
+
+                if( preg_match('/^\d{12}$/', $matricule) === 0){
+                    $this->addFlash('warning', "Ce fichier excel contient un matricule invalide. Matricule $matricule. Ligne : {$rowData[0]}");
+                    return $this->redirectToRoute('app_note_index');
+                }
+
+                foreach ($notes as $index => $note) {
+                    if (!is_numeric($note)) {
+                        $this->addFlash('warning', "La note " . ($index + 1) . " n'est pas un nombre valide. Ligne : {$nb}");
+                        return $this->redirectToRoute('app_note_index');
+                    }
+
+                    $noteFloat = (float) $note;
+                    if ($noteFloat < 0 || $noteFloat > 10) {
+                        $this->addFlash('warning', "La note " . ($index + 1) . " doit être comprise entre 0 et 10. Ligne : {$nb}");
+                        return $this->redirectToRoute('app_note_index');
+                    }
+                }
+
+                $rowData = [$student, $note1, $note2, $note3];
+                $data[] = $rowData;
+            }
+
+            foreach ($data as $dt){
+                $note = $em->getRepository(Note::class)->findOneBy(['student' => $dt[0], 'matiere' => $matiere]);
+                $note->setMatiere($matiere);
+                $note->setStudent($dt[0]);
+                $note->setNote1($dt[1]);
+                $note->setNote2($dt[2]);
+                $note->setNote3($dt[3]);
+
+                $em->persist($note);
+                $em->flush();
+            }
+
+            $this->addFlash('success', 'Rapport importé avec succès');
+            return $this->redirectToRoute('app_note_index');
+        }
+
+        return $this->redirectToRoute('app_note_index', [], Response::HTTP_SEE_OTHER);
+    }
 
 
    

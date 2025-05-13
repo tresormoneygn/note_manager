@@ -189,44 +189,67 @@
         </div>
 
 
-        {# Statitique des notes #}
-        <div class="bg-white shadow-md rounded-lg overflow-hidden mt-5 p-4">
-            {# Diagramme #}
-            <h2 class="text-xl font-semibold mb-4 mt-4">Statistiques des Notes</h2>
-            <p class="text-gray-600 mb-4">Répartition des notes par valeur</p>
-            <canvas id="noteChart" width="300" height="300"></canvas>
-            <script>
-                var ctx = document.getElementById('noteChart').getContext('2d');
+       {# Statitique des notes #}
+    
+        <div class=" bg-white shadow rounded-lg p-4 mt-5">
+            <h2 class="text-lg font-semibold mb-2">Statistiques des notes par etudiant</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
+                <div class="">
+                    <h2 class="text-lg font-semibold mb-2">Répartition par mention</h2>
+                    <canvas id="mentionChart" width="300" height="300"></canvas>
+                </div>
 
-                var noteChart = new Chart(ctx, {
-                    type: 'pie', // Ou 'doughnut' pour un diagramme en donut
+                <div class="">
+                    <h2 class="text-lg font-semibold mb-2">Répartition par moyenne</h2>
+                    <canvas id="intervalChart" width="300" height="300"></canvas>
+                </div>
+            </div>
+            
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", () =>{
+                const intervalData = {{ intervals|json_encode|raw }};
+                const mentionData = {{ mentions|json_encode|raw }};
+
+                // Chart 1 : Répartition des moyennes
+                const intervalChart = new Chart(document.getElementById('intervalChart').getContext('2d'), {
+                    type: 'bar',
                     data: {
-                        labels: ['A', 'B', 'C'], // Les labels des catégories
+                        labels: Object.keys(intervalData),
                         datasets: [{
-                            label: 'Répartition des notes',
-                            data: [300, 150, 100], // Les données des catégories
-                            backgroundColor: ['#ff9999', '#66b3ff', '#99ff99'],
-                            borderColor: ['#fff', '#fff', '#fff', '#fff', '#fff'],
-                            borderWidth: 1
+                            label: 'Étudiants',
+                            data: Object.values(intervalData),
+                            backgroundColor: '#4f46e5'
                         }]
                     },
                     options: {
-                        responsive: false,
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+                
+
+                // Chart 2 : Répartition des mentions
+                const mentionChart =  new Chart(document.getElementById('mentionChart').getContext('2d'), {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(mentionData),
+                        datasets: [{
+                            label: 'Mentions',
+                            data: Object.values(mentionData),
+                            backgroundColor: ['#ef4444', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa','#f87171']
+                        }]
+                    },
+                    options: {
                         plugins: {
                             legend: {
-                                position: 'top',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(tooltipItem) {
-                                        return tooltipItem.label + ': ' + tooltipItem.raw + ' notes';
-                                    }
-                                }
+                                position: 'bottom'
                             }
                         }
                     }
                 });
-            </script>
-        </div>
+            }); 
+        </script>
     </div>
 {% endblock %}

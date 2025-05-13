@@ -192,10 +192,10 @@
        {# Statitique des notes #}
     
         <div class=" bg-white shadow rounded-lg p-4 mt-5">
-            <h2 class="text-lg font-semibold mb-2">Statistiques des notes par etudiant</h2>
+            <h2 class="text-lg font-semibold mb-2">Statistiques des notes par Etudiants</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-5">
                 <div class="">
-                    <h2 class="text-lg font-semibold mb-2">Répartition par mention</h2>
+                    <h2 class="text-lg font-semibold mb-2">Répartition par Admission</h2>
                     <canvas id="mentionChart" width="300" height="300"></canvas>
                 </div>
 
@@ -209,7 +209,7 @@
         <script>
             document.addEventListener("DOMContentLoaded", () =>{
                 const intervalData = {{ intervals|json_encode|raw }};
-                const mentionData = {{ mentions|json_encode|raw }};
+                const mentionData = {{ types|json_encode|raw }};
 
                 // Chart 1 : Répartition des moyennes
                 const intervalChart = new Chart(document.getElementById('intervalChart').getContext('2d'), {
@@ -230,21 +230,21 @@
                 });
                 
 
-                // Chart 2 : Répartition des mentions
+                // Chart 2 : Répartition par type (Valide ou pas)
                 const mentionChart =  new Chart(document.getElementById('mentionChart').getContext('2d'), {
                     type: 'pie',
                     data: {
                         labels: Object.keys(mentionData),
                         datasets: [{
-                            label: 'Mentions',
+                            label: 'Etudiants',
                             data: Object.values(mentionData),
-                            backgroundColor: ['#ef4444', '#fbbf24', '#34d399', '#60a5fa', '#a78bfa','#f87171']
+                            backgroundColor: ['#27ae60', '#e74c3c']
                         }]
                     },
                     options: {
                         plugins: {
                             legend: {
-                                position: 'bottom'
+                                position: 'top'
                             }
                         }
                     }

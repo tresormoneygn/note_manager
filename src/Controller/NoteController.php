@@ -10,6 +10,7 @@ use App\Entity\Note;
 use App\Entity\Rapport;
 use App\Form\NoteType;
 use App\Repository\NoteRepository;
+use App\Repository\MatiereRepository;
 use App\Form\FiltreNoteType;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -28,7 +29,7 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class NoteController extends AbstractController
 {
     #[Route(name: 'app_note_index', methods: ['GET'])]
-    public function index(Request $request, NoteRepository $noteRepository): Response
+    public function index(Request $request, NoteRepository $noteRepository, MatiereRepository $matiereRepository): Response
     {
         $form = $this->createForm(FiltreNoteType::class, null, [
             'method' => 'GET'
@@ -57,8 +58,9 @@ final class NoteController extends AbstractController
         return $this->render('note/index.html.twig', [
             'form' => $form->createView(),
             'notes' => $notes,
+            'matieres' => $matiereRepository->findAll(),
             'intervals' => $stats['intervals'],
-            'mentions' => $stats['mentions'],
+            'types' => $stats['types'],
         ]);
 
         // return $this->render('note/index.html.twig', [
@@ -88,42 +90,34 @@ final class NoteController extends AbstractController
     private function calculateStatistics(array $notes): array
     {
         $intervals = [
-            '0-2.5' => 0,
-            '2.5-5' => 0,
-            '5-7.5' => 0,
-            '7.5-10' => 0
+            'Moyenne entre 0 et 2.5' => 0,
+            'Moyenne entre 2.5 et 5' => 0,
+            'Moyenne entre 5 et 7.5' => 0,
+            'Moyenne entre 7.5 et 10' => 0
         ];
 
-        $mentions = [
-            'Insuffisant' => 0,
-            'Passable' => 0,
-            'Assez bien' => 0,
-            'Bien' => 0,
-            'Très bien' => 0,
-            'Excellent' => 0
+        $types = [
+            'Admis' => 0,
+            'Non Admis' => 0
         ];
 
         foreach ($notes as $note) {
             $moyenne = ($note->getNote1()*0.3 + $note->getNote2()*0.3 + $note->getNote3()*0.4);
 
             // Répartition par tranches
-            if ($moyenne < 2.5) $intervals['0-2.5']++;
-            elseif ($moyenne < 5) $intervals['2.5-5']++;
-            elseif ($moyenne < 7.5) $intervals['5-7.5']++;
-            else $intervals['7.5-10']++;
+            if ($moyenne < 2.5) $intervals['Moyenne entre 0 et 2.5']++;
+            elseif ($moyenne < 5) $intervals['Moyenne entre 2.5 et 5']++;
+            elseif ($moyenne < 7.5) $intervals['Moyenne entre 5 et 7.5']++;
+            else $intervals['Moyenne entre 7.5 et 10']++;
 
             // Répartition par mention
-            if ($moyenne < 5) $mentions['Insuffisant']++;
-            elseif ($moyenne < 6) $mentions['Passable']++;
-            elseif ($moyenne < 7) $mentions['Assez bien']++;
-            elseif ($moyenne < 8) $mentions['Bien']++;
-            elseif ($moyenne < 9) $mentions['Très bien']++;
-            else $mentions['Excellent']++;
+            if ($moyenne < 5) $types['Non Admis']++;
+            else $types['Admis']++;
         }
 
         return [
             'intervals' => $intervals,
-            'mentions' => $mentions,
+            'types' => $types,
         ];
     }
 

@@ -28,61 +28,103 @@ use Symfony\Component\String\Slugger\SluggerInterface;
 final class NoteController extends AbstractController
 {
     #[Route(name: 'app_note_index', methods: ['GET'])]
-    public function index(Request $request, NoteRepository $noteRepository, Security $security): Response
+    public function index(Request $request, NoteRepository $noteRepository): Response
     {
-        // Récupération de l'utilisateur connecté
         $form = $this->createForm(FiltreNoteType::class, null, [
             'method' => 'GET'
         ]);
         $form->handleRequest($request);
 
         $notes = [];
-        $noteData = []; // Pour stocker les données du graphique
+        $stats = [];
+
 
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $matricule = $data['matricule'] ?? null;
             $nom = $data['nom'] ?? null;
             $annee = $data['annee'] ?? null;
-            $matiere = $data['matiere'] ?? null;
 
-            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee, $matiere);
+            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee);
             // Calculer les statistiques des notes
-            $noteData = $this->calculateNoteStatistics($notes);
+            //$stats = $this->calculateStatistics($notes);
         } else {
             $notes = $noteRepository->findAll();
+            
         }
 
+        $stats = $this->calculateStatistics($notes);
         return $this->render('note/index.html.twig', [
             'form' => $form->createView(),
             'notes' => $notes,
-            'noteData' => $noteData,
-            'matieres' => $security->getUser()->getMatieres(),
+            'intervals' => $stats['intervals'],
+            'mentions' => $stats['mentions'],
         ]);
+
+        // return $this->render('note/index.html.twig', [
+        //     'form' => $form->createView(),
+        //     'notes' => $noteRepository->findAll(),
+        // ]);
+
+
+
+        
     }
 
+    
 
-    private function calculateNoteStatistics($notes)
+    public function afficherStatistiques(NoteRepository $noteRepository): Response
     {
-        // Exemple de calcul de répartition des notes
-        $noteData = ['A' => 0, 'B' => 0, 'C' => 0, 'D' => 0, 'E' => 0];
+        $notes = $noteRepository->findAll(); // Ou selon ton filtre
+        $noteData = $this->calculateNoteStatistics($notes);
+
+        return $this->render('app_note_index', [], Response::HTTP_SEE_OTHER, [
+            'noteData' => $noteData
+        ]);
+    } 
+
+
+    // Exemple de fonction pour calculer les statistiques des notes
+    private function calculateStatistics(array $notes): array
+    {
+        $intervals = [
+            '0-2.5' => 0,
+            '2.5-5' => 0,
+            '5-7.5' => 0,
+            '7.5-10' => 0
+        ];
+
+        $mentions = [
+            'Insuffisant' => 0,
+            'Passable' => 0,
+            'Assez bien' => 0,
+            'Bien' => 0,
+            'Très bien' => 0,
+            'Excellent' => 0
+        ];
 
         foreach ($notes as $note) {
-            $moyenne = $note->getMoyenne();
-            if ($moyenne >= 9) {
-                $noteData['A']++;
-            } elseif ($moyenne >= 8) {
-                $noteData['B']++;
-            } elseif ($moyenne >= 7) {
-                $noteData['C']++;
-            } elseif ($moyenne >= 6) {
-                $noteData['D']++;
-            } else {
-                $noteData['E']++;
-            }
+            $moyenne = ($note->getNote1()*0.3 + $note->getNote2()*0.3 + $note->getNote3()*0.4);
+
+            // Répartition par tranches
+            if ($moyenne < 2.5) $intervals['0-2.5']++;
+            elseif ($moyenne < 5) $intervals['2.5-5']++;
+            elseif ($moyenne < 7.5) $intervals['5-7.5']++;
+            else $intervals['7.5-10']++;
+
+            // Répartition par mention
+            if ($moyenne < 5) $mentions['Insuffisant']++;
+            elseif ($moyenne < 6) $mentions['Passable']++;
+            elseif ($moyenne < 7) $mentions['Assez bien']++;
+            elseif ($moyenne < 8) $mentions['Bien']++;
+            elseif ($moyenne < 9) $mentions['Très bien']++;
+            else $mentions['Excellent']++;
         }
 
-        return $noteData;
+        return [
+            'intervals' => $intervals,
+            'mentions' => $mentions,
+        ];
     }
 
     #[Route('/new', name: 'app_note_new', methods: ['GET', 'POST'])]

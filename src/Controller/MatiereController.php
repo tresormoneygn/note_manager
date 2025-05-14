@@ -45,6 +45,7 @@ final class MatiereController extends AbstractController
         ]);
     }
 
+
     #[Route('/{id}', name: 'app_matiere_show', methods: ['GET'])]
     public function show(Matiere $matiere): Response
     {

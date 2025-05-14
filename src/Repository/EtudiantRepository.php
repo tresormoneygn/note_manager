@@ -38,4 +38,17 @@ class EtudiantRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+    public function filtrerEtudiant(?string $matricule, ?string $nom, $matiere): \Doctrine\ORM\QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('e');
+
+        if (!empty($matricule)) {
+        }
+        if (!empty($nom)) {
+        }
+        if (!empty($matiere)) {
+        }
+        return $qb;
+    }
 }

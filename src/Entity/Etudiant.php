@@ -24,8 +24,8 @@ class Etudiant
     #[ORM\Column(length: 45)]
     private ?string $prenom = null;
 
-    #[ORM\Column(length: 45, nullable: true)]
-    private ?string $date_naissance = null;
+    #[ORM\Column(type: 'date', nullable: true)]
+    private ?\DateTimeInterface $date_naissance = null;
 
     #[ORM\Column(length: 45, nullable: true)]
     private ?string $email = null;
@@ -57,9 +57,16 @@ class Etudiant
     #[ORM\OneToMany(targetEntity: Note::class, mappedBy: 'student')]
     private Collection $notes;
 
+    /**
+     * @var Collection<int, Inscription>
+     */
+    #[ORM\OneToMany(targetEntity: Inscription::class, mappedBy: 'etudiant')]
+    private Collection $inscriptions;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
+        $this->inscriptions = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -103,12 +110,12 @@ class Etudiant
         return $this;
     }
 
-    public function getDateNaissance(): ?string
+    public function getDateNaissance(): ?\DateTimeInterface
     {
         return $this->date_naissance;
     }
 
-    public function setDateNaissance(?string $date_naissance): static
+    public function setDateNaissance(?\DateTimeInterface $date_naissance): static
     {
         $this->date_naissance = $date_naissance;
 
@@ -235,6 +242,36 @@ class Etudiant
             // set the owning side to null (unless already changed)
             if ($note->getStudent() === $this) {
                 $note->setStudent(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Inscription>
+     */
+    public function getInscriptions(): Collection
+    {
+        return $this->inscriptions;
+    }
+
+    public function addInscription(Inscription $inscription): static
+    {
+        if (!$this->inscriptions->contains($inscription)) {
+            $this->inscriptions->add($inscription);
+            $inscription->setEtudiant($this);
+        }
+
+        return $this;
+    }
+
+    public function removeInscription(Inscription $inscription): static
+    {
+        if ($this->inscriptions->removeElement($inscription)) {
+            // set the owning side to null (unless already changed)
+            if ($inscription->getEtudiant() === $this) {
+                $inscription->setEtudiant(null);
             }
         }
 

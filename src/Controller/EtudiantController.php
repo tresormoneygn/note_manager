@@ -2,13 +2,17 @@
 
 namespace App\Controller;
 
+use App\Entity\Annee;
 use App\Entity\Etudiant;
+use App\Entity\Inscription;
 use App\Form\EtudiantType;
 use App\Form\ImportRapportType;
+use App\Form\FiltreEtudiantType;
 use App\Repository\EtudiantRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -22,31 +26,32 @@ class EtudiantController extends AbstractController
     public function index(
         EtudiantRepository $etudiantRepository,
         Request $request,
-        PaginatorInterface $paginator
+        PaginatorInterface $paginator,
+        Security $security,
+        EntityManagerInterface $entityManager
     ): Response {
-        $form = $this->createForm(ImportRapportType::class);
+        $importForm = $this->createForm(ImportRapportType::class, options: [
+            'user' => $this->getUser(),
+            'annee' => $entityManager->getRepository(Annee::class)->findOneBy(['is_progress'=> true]),
+        ]);
 
-        // Récupérer les critères de recherche
-        $matricule = $request->query->get('matricule');
-        $nom = $request->query->get('nom');
-        $prenom = $request->query->get('prenom');
+        $user = $security->getUser();
+        $filtreForm = $this->createForm(FiltreEtudiantType::class, null, [
+            'method' => 'GET',
+            'user_matieres' => $user->getMatieres()
+        ]);
+        $filtreForm->handleRequest($request);
 
         // Construire la requête en fonction des critères
         $queryBuilder = $etudiantRepository->createQueryBuilder('e');
 
-        if ($matricule) {
-            $queryBuilder->andWhere('e.matricule LIKE :matricule')
-                ->setParameter('matricule', '%'.$matricule.'%');
-        }
+        if ($filtreForm->isSubmitted() && $filtreForm->isValid()) {
+            $data = $filtreForm->getData();
+            $matricule = $data['matricule'] ?? null;
+            $nom = $data['nom'] ?? null;
+            $matiere = $data['matiere'] ?? null;
 
-        if ($nom) {
-            $queryBuilder->andWhere('e.nom LIKE :nom')
-                ->setParameter('nom', '%'.$nom.'%');
-        }
-
-        if ($prenom) {
-            $queryBuilder->andWhere('e.prenom LIKE :prenom')
-                ->setParameter('prenom', '%'.$prenom.'%');
+            $queryBuilder = $etudiantRepository->filtrerEtudiant($matricule, $nom, $matiere);
         }
 
         // Paginer les résultats
@@ -63,7 +68,8 @@ class EtudiantController extends AbstractController
         return $this->render('etudiant/index.html.twig', [
             'etudiants' => $etudiants,
             'active_page' => 'etudiant',
-            'form' => $form->createView(),
+            'form' => $importForm->createView(),
+            'filtre_form' => $filtreForm->createView(),
         ]);
     }
 

@@ -2,17 +2,28 @@
 namespace App\Form;
 
 use App\Constant\FormConstant;
+use App\Entity\Annee;
 use App\Entity\Matiere;
+use App\Entity\Programme;
+use Doctrine\ORM\EntityRepository;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
+use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Validator\Constraints\File;
 
 class ImportRapportType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        /** @var UserInterface $user */
+        $user = $options['user'];
+
+        /** @var Annee $annee */
+        $annee = $options['annee'];
+
         $builder
             ->add('rapport', FileType::class, [
                 'label' => 'Fichier Excel',
@@ -34,9 +45,35 @@ class ImportRapportType extends AbstractType
             ->add('matiere', EntityType::class, [
                 'class' => Matiere::class,
                 'choice_label' => 'name',
-                'required' => false,
+                'required' => true,
                 'placeholder' => '-- Choisir une matière --',
-                'label' => 'Matière'
+                'label' => 'Matière',
+                'query_builder' => function (EntityRepository $er) use ($user) {
+                    return $er->createQueryBuilder('m')
+                        ->where('m.user = :user')
+                        ->setParameter('user', $user);
+                },
+            ])
+            ->add('programme', EntityType::class, [
+                'class' => Programme::class,
+                'choice_label' => 'name',
+                'required' => true,
+                'placeholder' => '-- Choisir un programme --',
+                'label' => 'Programme',
+                'query_builder' => function (EntityRepository $er) use ($annee) {
+                    return $er->createQueryBuilder('p')
+                        ->where('p.annee = :annee')
+                        ->setParameter('annee', $annee);
+                }
             ]);
+    }
+
+    public function configureOptions(OptionsResolver $resolver)
+    {
+        parent::configureOptions($resolver);
+        $resolver->setDefaults([
+            'user' => null,
+            'annee' => null,
+        ]);
     }
 }

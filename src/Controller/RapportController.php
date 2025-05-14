@@ -4,9 +4,14 @@ namespace App\Controller;
 
 use App\Constant\FileConstant;
 use App\Constant\xtnsionConstant;
+use App\Entity\Annee;
 use App\Entity\Etudiant;
+use App\Entity\Inscription;
+use App\Entity\Matiere;
 use App\Entity\Note;
+use App\Entity\Programme;
 use App\Entity\Rapport;
+use App\Entity\UniteEnseignement;
 use App\Form\ImportRapportType;
 use App\Form\RapportType;
 use App\Repository\RapportRepository;
@@ -35,6 +40,10 @@ class RapportController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $excelFile = $form->get('rapport')->getData();
             $matiere = $form->get('matiere')->getData();
+            /** @var Programme $programme */
+            $programme = $form->get('programme')->getData();
+            /** @var Annee $annee */
+            $annee = $em->getRepository(Annee::class)->findOneBy(['is_progress'=>true]);
 
             $newFilename = '';
             if ($excelFile) {
@@ -130,14 +139,28 @@ class RapportController extends AbstractController
                     $em->persist($std);
                     $em->flush();
 
-                    $note = new Note();
-                    $note->setMatiere($matiere);
-                    $note->setStudent($std);
-                    $note->setNote1(0);
-                    $note->setNote2(0);
-                    $note->setNote3(0);
-                    $em->persist($note);
-                    $em->flush();
+                    $inscription = new Inscription();
+                    $inscription->setProgramme($programme);
+                    $inscription->setEtudiant($std);
+                    $inscription->setAnnee($annee);
+                    $em->persist($inscription);
+
+                    /** @var UniteEnseignement[] $unite_enseignements */
+                    $unite_enseignements = $em->getRepository(UniteEnseignement::class)->findBy(['programme' => $programme]);
+                    foreach ($unite_enseignements as $unite_enseignement){
+                        /** @var Matiere[] $matieres */
+                        $matieres = $em->getRepository(Matiere::class)->findBy(['uniteEnseignement' => $unite_enseignement]);
+                        foreach ($matieres as $m){
+                            $note = new Note();
+                            $note->setMatiere($m);
+                            $note->setStudent($std);
+                            $note->setNote1(0);
+                            $note->setNote2(0);
+                            $note->setNote3(0);
+                            $em->persist($note);
+                            $em->flush();
+                        }
+                    }
                 }
 
                 // Sauvegarder un Rapport

@@ -39,6 +39,7 @@ class EtudiantType extends AbstractType
                 'label_attr' => ['class' => 'block text-sm font-medium text-gray-700']
             ])
             ->add('date_naissance', DateType::class, [
+                'required' => false,
                 'widget' => 'single_text',
                 'attr' => [
                     'class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
@@ -60,6 +61,7 @@ class EtudiantType extends AbstractType
                 'label_attr' => ['class' => 'block text-sm font-medium text-gray-700']
             ])
             ->add('addresse', TextType::class, [
+                'required' => false,
                 'attr' => [
                     'class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                     'placeholder' => 'Adresse complète'
@@ -74,6 +76,7 @@ class EtudiantType extends AbstractType
                 'label_attr' => ['class' => 'block text-sm font-medium text-gray-700']
             ])
             ->add('lieu_naissance', TextType::class, [
+                'required' => false,
                 'attr' => [
                     'class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                     'placeholder' => 'Lieu de naissance'
@@ -81,6 +84,7 @@ class EtudiantType extends AbstractType
                 'label_attr' => ['class' => 'block text-sm font-medium text-gray-700']
             ])
             ->add('pere', TextType::class, [
+                'required' => false,
                 'attr' => [
                     'class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                     'placeholder' => 'Nom complet du père'
@@ -89,6 +93,7 @@ class EtudiantType extends AbstractType
                 'required' => false
             ])
             ->add('mere', TextType::class, [
+                'required' => false,
                 'attr' => [
                     'class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                     'placeholder' => 'Nom complet de la mère'
@@ -97,12 +102,12 @@ class EtudiantType extends AbstractType
                 'required' => false
             ])
             ->add('nom_tuteur', TextType::class, [
+                'required' => false,
                 'attr' => [
                     'class' => 'mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500',
                     'placeholder' => 'Nom complet du tuteur'
                 ],
                 'label_attr' => ['class' => 'block text-sm font-medium text-gray-700'],
-                'required' => false
             ]);
     }
 

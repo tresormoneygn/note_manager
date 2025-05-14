@@ -51,7 +51,7 @@ final class NoteController extends AbstractController
             //$stats = $this->calculateStatistics($notes);
         } else {
             $notes = $noteRepository->findAll();
-            
+
         }
 
         $stats = $this->calculateStatistics($notes);
@@ -70,10 +70,10 @@ final class NoteController extends AbstractController
 
 
 
-        
+
     }
 
-    
+
 
     public function afficherStatistiques(NoteRepository $noteRepository): Response
     {
@@ -83,7 +83,7 @@ final class NoteController extends AbstractController
         return $this->render('app_note_index', [], Response::HTTP_SEE_OTHER, [
             'noteData' => $noteData
         ]);
-    } 
+    }
 
 
     // Exemple de fonction pour calculer les statistiques des notes
@@ -122,7 +122,7 @@ final class NoteController extends AbstractController
     }
 
     #[Route('/new', name: 'app_note_new', methods: ['GET', 'POST'])]
-    #[Security("is_granted('ROLE_TEACHER') and user.getUserType() === 'teacher'")]
+    #[IsGranted('ROLE_ADMIN')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $note = new Note();
@@ -333,5 +333,5 @@ final class NoteController extends AbstractController
     }
 
 
-   
+
 }

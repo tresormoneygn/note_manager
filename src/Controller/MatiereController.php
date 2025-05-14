@@ -33,7 +33,6 @@ final class MatiereController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            dd($matiere, $form->getData());
             $entityManager->persist($matiere);
             $entityManager->flush();
 

@@ -7,6 +7,7 @@ use App\Form\RegistrationFormType;
 use App\Repository\UserRepository;
 use App\Security\EmailVerifier;
 use App\Security\UserAuthenticator;
+use App\Service\RoleFonctionManager;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bridge\Twig\Mime\TemplatedEmail;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,7 +20,8 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use SymfonyCasts\Bundle\VerifyEmail\Exception\VerifyEmailExceptionInterface;
 
-#[IsGranted('ROLE_ADMIN')]
+// Temporairement commenté pour permettre la création du premier utilisateur DG
+#[IsGranted('ROLE_DG')]
 class RegistrationController extends AbstractController
 {
     public function __construct(private EmailVerifier $emailVerifier)
@@ -27,7 +29,7 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager): Response
+    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager, RoleFonctionManager $roleFonctionManager): Response
     {
         // Cette route est accessible à tous
         $user = new User();
@@ -38,21 +40,13 @@ class RegistrationController extends AbstractController
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
             
-            // Récupérer le type d'utilisateur
-            $userType = $form->get('userType')->getData();
+            // Les fonctions sont déjà attribuées à l'utilisateur via le formulaire
+            // Les rôles seront automatiquement générés à partir des fonctions dans la méthode getRoles()
+            // Nous n'avons donc pas besoin d'attribuer manuellement des rôles ici
+            $user->setRoles(['ROLE_USER']);
             
-            // Attribuer les rôles en fonction du type d'utilisateur
-            $roles = ['ROLE_USER'];
-            switch ($userType) {
-                case 'teacher':
-                    $roles[] = 'ROLE_TEACHER';
-                    break;
-                case 'admin':
-                default:
-                    $roles[] = 'ROLE_ADMIN';
-                    break;
-            }
-            $user->setRoles($roles);
+            // Si des rôles spécifiques sont attribués, synchroniser les fonctions correspondantes
+            $roleFonctionManager->synchronizeFonctionsFromRoles($user);
 
             // encode the plain password
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));

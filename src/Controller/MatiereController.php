@@ -25,7 +25,7 @@ final class MatiereController extends AbstractController
     }
 
     #[Route('/new', name: 'app_matiere_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_DGA_E')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $matiere = new Matiere();
@@ -55,7 +55,7 @@ final class MatiereController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_matiere_edit', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_DGA_E')]
     public function edit(Request $request, Matiere $matiere, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(MatiereType::class, $matiere);
@@ -74,7 +74,7 @@ final class MatiereController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_matiere_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_DGA_E')]
     public function delete(Request $request, Matiere $matiere, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$matiere->getId(), $request->getPayload()->getString('_token'))) {

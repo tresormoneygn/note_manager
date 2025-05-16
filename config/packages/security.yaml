@@ -46,9 +46,37 @@ security:
     # Easy way to control access for large sections of your site
     # Note: Only the *first* access control that matches will be used
     
+    role_hierarchy:
+        ROLE_P: ROLE_USER
+        ROLE_DG: ROLE_USER
+        ROLE_DGA_E: ROLE_USER
+        ROLE_DGA_R: ROLE_USER
+        ROLE_SF: ROLE_USER
+        ROLE_CD: ROLE_USER
+        ROLE_DP: ROLE_USER
+    
     access_control:
-        # - { path: ^/admin, roles: ROLE_ADMIN }
-        # - { path: ^/profile, roles: ROLE_USER }
+        # Routes d'inscription (réservées au DG)
+        - { path: ^/register, roles: ROLE_DG }
+        
+        # Routes de gestion des programmes et départements (réservées au DG)
+        - { path: ^/programme/new, roles: ROLE_DG }
+        - { path: ^/programme/.*/edit, roles: ROLE_DG }
+        - { path: ^/departement/new, roles: ROLE_DG }
+        - { path: ^/departement/.*/edit, roles: ROLE_DG }
+        
+        # Routes de gestion des matières et unités d'enseignement (réservées au DGA/E)
+        - { path: ^/matiere/new, roles: ROLE_DGA_E }
+        - { path: ^/matiere/.*/edit, roles: ROLE_DGA_E }
+        - { path: ^/unite/enseignement/new, roles: ROLE_DGA_E }
+        - { path: ^/unite/enseignement/.*/edit, roles: ROLE_DGA_E }
+        
+        # Routes de gestion des notes (réservées aux professeurs)
+        - { path: ^/note, roles: ROLE_P }
+        
+        # Routes publiques
+        - { path: ^/login, roles: PUBLIC_ACCESS }
+        - { path: ^/$, roles: PUBLIC_ACCESS }
 
 when@test:
     security:

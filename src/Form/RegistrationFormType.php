@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\User;
 use App\Entity\Programme;
+use App\Entity\Fonction;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
@@ -26,17 +27,15 @@ class RegistrationFormType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('userType', ChoiceType::class, [
-                'mapped' => false,
-                'label' => 'Type d\'utilisateur',
-                'choices' => [
-                    'Professeur' => 'teacher',
-                    'Personnel administratif' => 'admin'
-                ],
+            ->add('fonctions', EntityType::class, [
+                'class' => Fonction::class,
+                'choice_label' => 'name',
+                'label' => 'Fonction(s)',
                 'expanded' => true,
-                'multiple' => false,
+                'multiple' => true,
                 'required' => true,
-                'attr' => ['class' => 'flex gap-4 mb-3']
+                'attr' => ['class' => 'flex flex-col gap-2 mb-3'],
+                'help' => 'Sélectionnez une ou plusieurs fonctions pour cet utilisateur'
             ])
             ->add('email', EmailType::class, [
                 'label' => 'Email',

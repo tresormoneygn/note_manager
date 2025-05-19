@@ -57,6 +57,9 @@ class Etudiant
     #[ORM\OneToMany(targetEntity: Note::class, mappedBy: 'student')]
     private Collection $notes;
 
+    #[ORM\Column(length: 1)]
+    private ?string $sexe = null;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
@@ -237,6 +240,18 @@ class Etudiant
                 $note->setStudent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSexe(): ?string
+    {
+        return $this->sexe;
+    }
+
+    public function setSexe(string $sexe): static
+    {
+        $this->sexe = strtoupper($sexe);
 
         return $this;
     }

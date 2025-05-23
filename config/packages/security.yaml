@@ -47,32 +47,44 @@ security:
     # Note: Only the *first* access control that matches will be used
     
     role_hierarchy:
+        # Tous les rôles héritent de ROLE_USER
         ROLE_P: ROLE_USER
-        ROLE_DG: ROLE_USER
-        ROLE_DGA_E: ROLE_USER
-        ROLE_DGA_R: ROLE_USER
-        ROLE_SF: ROLE_USER
+        ROLE_ETUDIANT: ROLE_USER
+        ROLE_SCOLARITE: ROLE_USER
         ROLE_CD: ROLE_USER
-        ROLE_DP: ROLE_USER
+        ROLE_DP: [ROLE_USER, ROLE_P] # Directeur de Programme hérite des droits des Professeurs
+        ROLE_DGA_E: [ROLE_USER, ROLE_DP] # DGA/E hérite des droits des Directeurs de Programme
+        ROLE_DGA_R: [ROLE_USER, ROLE_DP] # DGA/R hérite des droits des Directeurs de Programme
+        ROLE_SF: ROLE_USER
+        ROLE_DG: [ROLE_USER, ROLE_DGA_E, ROLE_DGA_R] # DG hérite de tous les droits
     
     access_control:
         # Routes d'inscription (réservées au DG)
         - { path: ^/register, roles: ROLE_DG }
         
-        # Routes de gestion des programmes et départements (réservées au DG)
+        # Routes de gestion des programmes et départements (réservées au DG et DGA/E)
         - { path: ^/programme/new, roles: ROLE_DG }
         - { path: ^/programme/.*/edit, roles: ROLE_DG }
-        - { path: ^/departement/new, roles: ROLE_DG }
-        - { path: ^/departement/.*/edit, roles: ROLE_DG }
+        - { path: ^/departement/new, roles: ROLE_DGA_E }
+        - { path: ^/departement/.*/edit, roles: ROLE_DGA_E }
         
-        # Routes de gestion des matières et unités d'enseignement (réservées au DGA/E)
-        - { path: ^/matiere/new, roles: ROLE_DGA_E }
-        - { path: ^/matiere/.*/edit, roles: ROLE_DGA_E }
-        - { path: ^/unite/enseignement/new, roles: ROLE_DGA_E }
-        - { path: ^/unite/enseignement/.*/edit, roles: ROLE_DGA_E }
+        # Routes de gestion des matières et unités d'enseignement
+        - { path: ^/matiere/new, roles: ROLE_DP }                       # Directeurs de Programme
+        - { path: ^/matiere/.*/edit, roles: ROLE_DP }                  # Directeurs de Programme
+        - { path: ^/unite/enseignement/new, roles: ROLE_DP }           # Directeurs de Programme
+        - { path: ^/unite/enseignement/.*/edit, roles: ROLE_DP }       # Directeurs de Programme
         
-        # Routes de gestion des notes (réservées aux professeurs)
-        - { path: ^/note, roles: ROLE_P }
+        # Routes de gestion de l'emploi du temps
+        - { path: ^/emploi-du-temps/new, roles: ROLE_DP }              # Directeurs de Programme
+        - { path: ^/emploi-du-temps/.*/edit, roles: ROLE_DP }          # Directeurs de Programme
+        - { path: ^/emploi-du-temps/etudiant, roles: ROLE_ETUDIANT }   # Étudiants
+        
+        # Routes de gestion des notes
+        - { path: ^/note/new, roles: ROLE_P }                          # Professeurs
+        - { path: ^/note/.*/edit, roles: ROLE_P }                      # Professeurs
+        - { path: ^/note/valider, roles: ROLE_CD }                     # Chefs de Département
+        - { path: ^/note/etudiant, roles: ROLE_ETUDIANT }              # Étudiants
+        - { path: ^/note, roles: ROLE_P }                              # Accès général aux notes pour les Professeurs
         
         # Routes publiques
         - { path: ^/login, roles: PUBLIC_ACCESS }

@@ -25,7 +25,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Component\String\Slugger\SluggerInterface;
 
 #[Route('/note')]
-#[IsGranted('ROLE_TEACHER')]
+#[IsGranted('ROLE_P')]
 final class NoteController extends AbstractController
 {
     #[Route(name: 'app_note_index', methods: ['GET'])]
@@ -122,7 +122,7 @@ final class NoteController extends AbstractController
     }
 
     #[Route('/new', name: 'app_note_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_P')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $note = new Note();
@@ -151,7 +151,7 @@ final class NoteController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_note_edit', methods: ['GET', 'POST'])]
-    #[Security("is_granted('ROLE_TEACHER') and user.getUserType() === 'teacher'")]
+    #[IsGranted('ROLE_P')]
     public function edit(Request $request, Note $note, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(NoteType::class, $note);
@@ -170,7 +170,7 @@ final class NoteController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_note_delete', methods: ['POST'])]
-    #[Security("is_granted('ROLE_TEACHER') and user.getUserType() === 'teacher'")]
+    #[IsGranted('ROLE_P')]
     public function delete(Request $request, Note $note, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$note->getId(), $request->getPayload()->getString('_token'))) {

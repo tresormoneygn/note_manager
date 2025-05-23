@@ -14,6 +14,8 @@ class Constant
             'CD' => 'ROLE_CD',
             'DP' => 'ROLE_DP',
             'P' => 'ROLE_P',
+            'E' => 'ROLE_ETUDIANT',
+            'S' => 'ROLE_SCOLARITE',
         );
     }
 
@@ -38,6 +40,10 @@ class Constant
                 return 'Directeur de Programme';
             case 'P':
                 return 'Professeur';
+            case 'E':
+                return 'Etudiant';
+            case 'S':
+                return 'Scolarité';
             default:
                 return '';
         }

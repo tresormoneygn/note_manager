@@ -25,7 +25,7 @@ final class UniteEnseignementController extends AbstractController
     }
 
     #[Route('/new', name: 'app_unite_enseignement_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_DGA_E')]
+    #[IsGranted('ROLE_DP')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $uniteEnseignement = new UniteEnseignement();
@@ -55,7 +55,7 @@ final class UniteEnseignementController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_unite_enseignement_edit', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_DGA_E')]
+    #[IsGranted('ROLE_DP')]
     public function edit(Request $request, UniteEnseignement $uniteEnseignement, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(UniteEnseignementType::class, $uniteEnseignement);
@@ -74,7 +74,7 @@ final class UniteEnseignementController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_unite_enseignement_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_DGA_E')]
+    #[IsGranted('ROLE_DP')]
     public function delete(Request $request, UniteEnseignement $uniteEnseignement, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$uniteEnseignement->getId(), $request->getPayload()->getString('_token'))) {

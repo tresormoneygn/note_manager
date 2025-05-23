@@ -28,7 +28,7 @@ class MatiereType extends AbstractType
                 'query_builder' => function (UserRepository $er) {
                     return $er->createQueryBuilder('u')
                         ->where('u.roles LIKE :role')
-                        ->setParameter('role', '%"ROLE_TEACHER"%');
+                        ->setParameter('role', '%"ROLE_P"%');
                 }
             ])
         ;

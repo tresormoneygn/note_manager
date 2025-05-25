@@ -29,7 +29,7 @@ final class DepartementController extends AbstractController
     }
 
     #[Route('/new', name: 'app_departement_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_DG')]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $departement = new Departement();
@@ -81,7 +81,7 @@ final class DepartementController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'app_departement_edit', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_DG')]
     public function edit(Request $request, Departement $departement, EntityManagerInterface $entityManager): Response
     {
         $form = $this->createForm(DepartementType::class, $departement);
@@ -100,7 +100,7 @@ final class DepartementController extends AbstractController
     }
 
     #[Route('/{id}', name: 'app_departement_delete', methods: ['POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[IsGranted('ROLE_DG')]
     public function delete(Request $request, Departement $departement, EntityManagerInterface $entityManager): Response
     {
         if ($this->isCsrfTokenValid('delete'.$departement->getId(), $request->getPayload()->getString('_token'))) {

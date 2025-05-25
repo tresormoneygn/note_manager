@@ -133,6 +133,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
 
+        // Ajouter des rôles basés sur les fonctions de l'utilisateur
+        foreach ($this->fonctions as $fonction) {
+            $label = $fonction->getLabel();
+            if (array_key_exists($label, \App\Helpers\Constant::roles())) {
+                $roles[] = \App\Helpers\Constant::roles()[$label];
+            }
+        }
+
         return array_unique($roles);
     }
 

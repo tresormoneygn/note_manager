@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Entity\DepartementHistorique;
 use App\Entity\Departement;
 use App\Form\DepartementHistoriqueType;
+use App\Repository\AnneeRepository;
 use App\Repository\DepartementHistoriqueRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -15,7 +16,7 @@ use Doctrine\ORM\Query\Parameter;
 use Doctrine\Common\Collections\ArrayCollection;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
-#[Route('/departementhistorique')]
+#[Route('/departement-historique')]
 #[IsGranted('IS_AUTHENTICATED')]
 final class DepartementHistoriqueController extends AbstractController
 {
@@ -28,8 +29,8 @@ final class DepartementHistoriqueController extends AbstractController
     }
 
     #[Route('/new', name: 'app_departement_historique_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    #[Security("is_granted('ROLE_DG') or is_granted('ROLE_DGA_E')")]
+    public function new(Request $request, EntityManagerInterface $entityManager, AnneeRepository $anneeRepository): Response
     {
         $departementHistorique = new DepartementHistorique();
         $form = $this->createForm(DepartementHistoriqueType::class, $departementHistorique);
@@ -59,9 +60,12 @@ final class DepartementHistoriqueController extends AbstractController
             if ($exist) {
                 $this->addFlash('error', 'Ce département historique existe déjà pour cette année et ce département.');
             } else {
+                // Recuperer l'année en cours avec le annee repostitory
+                $anneeEnCours = $anneeRepository->findOneBy(['is_progress' => true]);
                 $now = new \DateTimeImmutable();
                 $departementHistorique->setCreatedAt($now);
                 $departementHistorique->setUpdatedAt($now);
+                $departementHistorique->setAnnee($anneeEnCours);
 
                 $entityManager->persist($departementHistorique);
                 $entityManager->flush();

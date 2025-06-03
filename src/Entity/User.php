@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Helpers\Constant;
 use App\Repository\UserRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
@@ -77,15 +78,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\OneToMany(targetEntity: DepartementHistorique::class, mappedBy: 'user')]
     private Collection $departementHistoriques;
 
-    #[ORM\ManyToOne(inversedBy: 'user')]
-    #[ORM\JoinColumn(nullable: true)]
-    private ?Programme $programme = null;
-
     /**
      * @var Collection<int, Matiere>
      */
     #[ORM\OneToMany(targetEntity: Matiere::class, mappedBy: 'user')]
     private Collection $matieres;
+
+    /**
+     * @var Collection<int, Programme>
+     */
+    #[ORM\OneToMany(targetEntity: Programme::class, mappedBy: 'user')]
+    private Collection $programmes;
 
     public function __construct()
     {
@@ -93,6 +96,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->rapports = new ArrayCollection();
         $this->departementHistoriques = new ArrayCollection();
         $this->matieres = new ArrayCollection();
+        $this->programmes = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -136,8 +140,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         // Ajouter des rôles basés sur les fonctions de l'utilisateur
         foreach ($this->fonctions as $fonction) {
             $label = $fonction->getLabel();
-            if (array_key_exists($label, \App\Helpers\Constant::roles())) {
-                $roles[] = \App\Helpers\Constant::roles()[$label];
+            if (array_key_exists($label, Constant::roles())) {
+                $roles[] = Constant::roles()[$label];
             }
         }
 
@@ -362,18 +366,6 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function getProgramme(): ?Programme
-    {
-        return $this->programme;
-    }
-
-    public function setProgramme(?Programme $programme): static
-    {
-        $this->programme = $programme;
-
-        return $this;
-    }
-
     /**
      * @return Collection<int, Matiere>
      */
@@ -398,6 +390,36 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             // set the owning side to null (unless already changed)
             if ($matiere->getUser() === $this) {
                 $matiere->setUser(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Programme>
+     */
+    public function getProgrammes(): Collection
+    {
+        return $this->programmes;
+    }
+
+    public function addProgramme(Programme $programme): static
+    {
+        if (!$this->programmes->contains($programme)) {
+            $this->programmes->add($programme);
+            $programme->setUser($this);
+        }
+
+        return $this;
+    }
+
+    public function removeProgramme(Programme $programme): static
+    {
+        if ($this->programmes->removeElement($programme)) {
+            // set the owning side to null (unless already changed)
+            if ($programme->getUser() === $this) {
+                $programme->setUser(null);
             }
         }
 

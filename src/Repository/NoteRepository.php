@@ -83,4 +83,15 @@ class NoteRepository extends ServiceEntityRepository
         }
         return $qb->getQuery()->getResult();
     }
+
+
+    public function findByEtudiant($etudiant): array
+    {
+        return $this->createQueryBuilder('n')
+            ->andWhere('n.etudiant = :etudiant')
+            ->setParameter('etudiant', $etudiant)
+            ->getQuery()
+            ->getResult();
+    }
+
 }

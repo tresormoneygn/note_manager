@@ -63,6 +63,9 @@ class Etudiant
     #[ORM\OneToMany(targetEntity: Inscription::class, mappedBy: 'etudiant')]
     private Collection $inscriptions;
 
+    #[ORM\Column(length: 1)]
+    private ?string $sexe = null;
+
     public function __construct()
     {
         $this->notes = new ArrayCollection();
@@ -110,12 +113,12 @@ class Etudiant
         return $this;
     }
 
-    public function getDateNaissance(): ?\DateTimeInterface
+    public function getDateNaissance(): ?string
     {
         return $this->date_naissance;
     }
 
-    public function setDateNaissance(?\DateTimeInterface $date_naissance): static
+    public function setDateNaissance(?string $date_naissance): static
     {
         $this->date_naissance = $date_naissance;
 
@@ -244,6 +247,18 @@ class Etudiant
                 $note->setStudent(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getSexe(): ?string
+    {
+        return $this->sexe;
+    }
+
+    public function setSexe(string $sexe): static
+    {
+        $this->sexe = strtoupper($sexe);
 
         return $this;
     }

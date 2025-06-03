@@ -21,9 +21,34 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ unite_enseignement.id }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ unite_enseignement.nom }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ unite_enseignement.coefficient }}</td>
-                    <td class="px-6 py-4 whitespace-nowrap space-x-2">
-                        <a href="{{ path('app_unite_enseignement_show', {'id': unite_enseignement.id}) }}" class="text-indigo-600 hover:text-indigo-900 font-medium">Voir</a>
-                        <a href="{{ path('app_unite_enseignement_edit', {'id': unite_enseignement.id}) }}" class="text-yellow-600 hover:text-yellow-900 font-medium">Modifier</a>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex space-x-3">
+                            <!-- Voir (œil) -->
+                            <a href="{{ path('app_unite_enseignement_show', {'id': unite_enseignement.id}) }}"
+                               class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                               title="Voir">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            <!-- Modifier (crayon) -->
+                            <a href="{{ path('app_unite_enseignement_edit', {'id': unite_enseignement.id}) }}"
+                               class="text-yellow-500 hover:text-yellow-700 transition-colors duration-200"
+                               title="Modifier">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+
+                            <!-- Optionnel : Bouton Delete avec icône poubelle -->
+                            <form method="post" action="{{ path('app_unite_enseignement_delete', {'id': unite_enseignement.id}) }}"
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce programme ?');"
+                                  class="inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ unite_enseignement.id) }}">
+                                <button type="submit"
+                                        class="text-red-500 hover:text-red-700 transition-colors duration-200"
+                                        title="Supprimer">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             {% else %}

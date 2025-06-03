@@ -53,18 +53,6 @@ class ImportRapportType extends AbstractType
                         ->where('m.user = :user')
                         ->setParameter('user', $user);
                 },
-            ])
-            ->add('programme', EntityType::class, [
-                'class' => Programme::class,
-                'choice_label' => 'name',
-                'required' => true,
-                'placeholder' => '-- Choisir un programme --',
-                'label' => 'Programme',
-                'query_builder' => function (EntityRepository $er) use ($annee) {
-                    return $er->createQueryBuilder('p')
-                        ->where('p.annee = :annee')
-                        ->setParameter('annee', $annee);
-                }
             ]);
     }
 

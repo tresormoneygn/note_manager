@@ -8,14 +8,11 @@ use App\Entity\Fonction;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
-use Symfony\Component\Form\FormEvent;
-use Symfony\Component\Form\FormEvents;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 use Symfony\Component\Validator\Constraints\Email;
 use Symfony\Component\Validator\Constraints\IsTrue;
@@ -34,7 +31,23 @@ class RegistrationFormType extends AbstractType
                 'expanded' => true,
                 'multiple' => true,
                 'required' => true,
-                'attr' => ['class' => 'flex flex-col gap-2 mb-3'],
+                'attr' => [
+                    'class' => 'flex flex-col space-y-3' // Disposition en colonne avec espacement vertical
+                ],
+                'row_attr' => [
+                    'class' => 'mb-6' // Marge en bas du groupe
+                ],
+                'label_attr' => [
+                    'class' => 'block mb-3 text-sm font-medium text-gray-700' // Style du label principal
+                ],
+                'help_attr' => [
+                    'class' => 'mt-1 text-sm text-gray-500' // Style du texte d'aide
+                ],
+                'choice_attr' => function() {
+                    return [
+                        'class' => 'mr-2 h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500' // Style des checkboxes
+                    ];
+                },
                 'help' => 'Sélectionnez une ou plusieurs fonctions pour cet utilisateur'
             ])
             ->add('email', EmailType::class, [
@@ -117,31 +130,34 @@ class RegistrationFormType extends AbstractType
                     ]),
                 ],
             ])
-            ->add('programme', EntityType::class, [
-                'class' => Programme::class,
-                'choice_label' => 'name',
-                'placeholder' => 'Sélectionnez votre programme',
-                'required' => false,
-                'attr' => [
-                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500'
-                ]
-            ])
-        ->add('agreeTerms', CheckboxType::class, [
+            ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
-                'label' => 'J\'accepte les conditions d\'utilisation',
+                'label' => 'J\'accepte les <a href="#" class="text-blue-600 hover:text-blue-800 hover:underline">conditions d\'utilisation</a>',
+                'label_html' => true,
+                'label_attr' => [
+                    'class' => 'ml-2 block text-sm text-gray-700 cursor-pointer'
+                ],
                 'constraints' => [
                     new IsTrue([
                         'message' => 'Vous devez accepter nos conditions d\'utilisation.',
                     ]),
                 ],
-            'attr' => ['class' => 'rounded text-blue-600 focus:ring-blue-500']
-        ])
+                'attr' => [
+                    'class' => 'h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer'
+                ],
+                'row_attr' => [
+                    'class' => 'flex items-start'
+                ]
+            ])
             ->add('plainPassword', PasswordType::class, [
                 // instead of being set onto the object directly,
                 // this is read and encoded in the controller
                 'mapped' => false,
                 'label' => 'Mot de passe',
-                'attr' => ['autocomplete' => 'new-password'],
+                'attr' => [
+                    'autocomplete' => 'new-password',
+                    'class' => 'block w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm text-gray-900 shadow-sm focus:border-blue-500 focus:ring-blue-500'
+                ],
                 'constraints' => [
                     new NotBlank([
                         'message' => 'Veuillez entrer un mot de passe',

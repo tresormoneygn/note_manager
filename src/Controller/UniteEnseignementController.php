@@ -34,6 +34,7 @@ final class UniteEnseignementController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $uniteEnseignement->setLabel('');
+            $uniteEnseignement->setCoefficient(6);
             $entityManager->persist($uniteEnseignement);
             $entityManager->flush();
 

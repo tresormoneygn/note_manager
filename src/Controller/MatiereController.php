@@ -19,6 +19,8 @@ final class MatiereController extends AbstractController
     #[Route(name: 'app_matiere_index', methods: ['GET'])]
     public function index(MatiereRepository $matiereRepository): Response
     {
+        // Rajouter la pagination si nécessaire
+        
         return $this->render('matiere/index.html.twig', [
             'matieres' => $matiereRepository->findAll(),
         ]);
@@ -33,6 +35,37 @@ final class MatiereController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $uniteEnseignement = $matiere->getUniteEnseignement();
+            if ($uniteEnseignement) {
+                // Vérifier le coefficient de la matière courante
+                if ($matiere->getCoefficient() > 6) {
+                    $this->addFlash('error', 'Le coefficient de la matière ne doit pas dépasser 6.');
+                    return $this->redirectToRoute('app_matiere_new', [], Response::HTTP_SEE_OTHER);
+                }
+
+                // Calculer la somme des coefficients
+                $totalCoefficients = 0;
+                $matieres = $uniteEnseignement->getMatieres();
+
+                foreach ($matieres as $m) {
+                    $totalCoefficients += $m->getCoefficient();
+                }
+
+                // Ajouter le coefficient de la nouvelle matière
+                $totalCoefficients += $matiere->getCoefficient();
+
+                // Vérifier le total
+                if ($totalCoefficients > 6) {
+                    $this->addFlash('error', sprintf(
+                        'La somme des coefficients des matières (%s) dépasse 6 pour cette unité d\'enseignement. ' .
+                        'Coefficient maximum autorisé: 6.',
+                        $totalCoefficients
+                    ));
+                    return $this->redirectToRoute('app_matiere_new', [], Response::HTTP_SEE_OTHER);
+                }
+            }
+
+            // Le nom renvoi toujours null mettre ce hack ici momentannement
             $entityManager->persist($matiere);
             $entityManager->flush();
 

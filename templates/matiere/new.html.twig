@@ -1,11 +1,15 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Matiere{% endblock %}
+{% block title %}NoteManager - Création Matiere{% endblock %}
 
 {% block body %}
-    <h1>Create new Matiere</h1>
+    <h1 class="text-center">Creation d'Une Matiere</h1>
 
     {{ include('matiere/_form.html.twig') }}
 
-    <a href="{{ path('app_matiere_index') }}">back to list</a>
+    <a href="{{ path('app_matiere_index') }}"
+       class="inline-flex items-center my-2 px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+    >
+        Rétourner
+    </a>
 {% endblock %}

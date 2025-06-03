@@ -5,6 +5,7 @@ namespace App\Controller;
 use App\Constant\FileConstant;
 use App\Constant\xtnsionConstant;
 use App\Entity\Annee;
+use App\Entity\Classe;
 use App\Entity\Etudiant;
 use App\Entity\Inscription;
 use App\Entity\Matiere;
@@ -14,9 +15,11 @@ use App\Entity\Rapport;
 use App\Entity\UniteEnseignement;
 use App\Form\ImportRapportType;
 use App\Form\RapportType;
+use App\Helpers\Constant;
 use App\Repository\RapportRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Color;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\HttpFoundation\File\Exception\FileException;
@@ -30,127 +33,121 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class RapportController extends AbstractController
 {
     #[Route('/import-rapport', name: 'import_rapport')]
-    #[IsGranted('ROLE_ADMIN')]
-    public function import(Request $request, EntityManagerInterface $em, SluggerInterface $slugger, Security $security): Response
+    public function import(
+        Request $request,
+        EntityManagerInterface $em,
+        SluggerInterface $slugger,
+        Security $security,
+        EntityManagerInterface $entityManager
+    ): Response
     {
-        $form = $this->createForm(ImportRapportType::class);
-        $form->handleRequest($request);
-        $newFilename = '';
+        try {
+            ini_set('max_execution_time', 6000);
+            ini_set('memory_limit', '1024M');
 
-        if ($form->isSubmitted() && $form->isValid()) {
-            $excelFile = $form->get('rapport')->getData();
-            $matiere = $form->get('matiere')->getData();
-            /** @var Programme $programme */
-            $programme = $form->get('programme')->getData();
-            /** @var Annee $annee */
-            $annee = $em->getRepository(Annee::class)->findOneBy(['is_progress'=>true]);
-
+            $form = $this->createForm(ImportRapportType::class, options: [
+                'user' => $this->getUser(),
+                'annee' => $entityManager->getRepository(Annee::class)->findOneBy(['is_progress' => true]),
+            ]);
+            $form->handleRequest($request);
             $newFilename = '';
-            if ($excelFile) {
-                // Vérification que le fichier est bien uploadé
-                if (!$excelFile->isValid()) {
+
+            if ($form->isSubmitted() && $form->isValid()) {
+                $em->getConnection()->beginTransaction(); // 🚨 DÉBUT TRANSACTION
+
+                $excelFile = $form->get('rapport')->getData();
+                $matiere = $form->get('matiere')->getData();
+
+                if ($excelFile && !$excelFile->isValid()) {
                     $this->addFlash('danger', 'Erreur lors de l\'upload du fichier');
                     return $this->redirectToRoute('app_etudiant_index');
                 }
+
                 $originalFilename = pathinfo($excelFile->getClientOriginalName(), PATHINFO_FILENAME);
                 $safeFilename = $slugger->slug($originalFilename);
-                $newFilename = $safeFilename.'-'.uniqid().'.'.$excelFile->guessExtension();
+                $newFilename = $safeFilename . '-' . uniqid() . '.' . $excelFile->guessExtension();
                 $uploadDir = $this->getParameter('uploads_directory');
                 $filePath = $uploadDir . '/' . $newFilename;
 
-                // Création du répertoire s'il n'existe pas
-                if (!file_exists($uploadDir)) {
-                    if (!mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
-                        $this->addFlash('danger', 'Impossible de créer le répertoire d\'upload');
-                        return $this->redirectToRoute('app_etudiant_index');
-                    }
+                if (!file_exists($uploadDir) && !mkdir($uploadDir, 0777, true) && !is_dir($uploadDir)) {
+                    throw new \RuntimeException('Impossible de créer le répertoire d\'upload');
                 }
 
-                try {
-                    $excelFile->move(
-                        $uploadDir,
-                        $newFilename
-                    );
-                } catch (FileException $e) {
-                    $this->addFlash('danger', 'Erreur lors de l\'enregistrement du fichier');
-                    return $this->redirectToRoute('import_rapport');
-                }
+                $excelFile->move($uploadDir, $newFilename);
 
-                // Lecture du fichier Excel
-                $spreadsheet = IOFactory::load($this->getParameter('uploads_directory') . '/' . $newFilename);
+                $spreadsheet = IOFactory::load($filePath);
                 $sheet = $spreadsheet->getActiveSheet();
 
                 $studentRepository = $em->getRepository(Etudiant::class);
-                $data = array();
-                foreach ($sheet->getRowIterator() as $row) { // ligne 1 = entêtes
+                $data = [];
+
+                foreach ($sheet->getRowIterator() as $row) {
                     $cellIterator = $row->getCellIterator();
                     $cellIterator->setIterateOnlyExistingCells(false);
-
                     $rowData = [];
+
                     foreach ($cellIterator as $cell) {
                         $rowData[] = $cell->getValue();
                     }
 
-                    // Vérification si l'entête correspond bien a ce qui est attendu
-                    if(
-                        ($rowData[0] !== FileConstant::EXCEL_FILE_NUMERO->value and $row->getRowIndex() == 1) or
-                        ($rowData[1] !== FileConstant::EXCEL_FILE_MATRICULE->value and $row->getRowIndex() == 1) or
-                        ($rowData[2] !== FileConstant::EXCEL_FILE_NOM->value and $row->getRowIndex() == 1) or
-                        ($rowData[3] !== FileConstant::EXCEl_FILE_PRENOM->value and $row->getRowIndex() == 1)
-                    ){
-                        $this->addFlash('warning', 'Ce fichier excel est invalide, veuillez le remplacer');
-                        return $this->redirectToRoute('app_etudiant_index');
+                    if (
+                        ($rowData[0] !== FileConstant::EXCEL_FILE_NUMERO->value && $row->getRowIndex() == 1) ||
+                        ($rowData[1] !== FileConstant::EXCEL_FILE_MATRICULE->value && $row->getRowIndex() == 1) ||
+                        ($rowData[2] !== FileConstant::EXCEL_FILE_NOM->value && $row->getRowIndex() == 1) ||
+                        ($rowData[3] !== FileConstant::EXCEl_FILE_PRENOM->value && $row->getRowIndex() == 1) ||
+                        ($rowData[8] !== FileConstant::EXCEL_FILE_SEXE->value && $row->getRowIndex() == 1)
+                    ) {
+                        throw new \Exception('Ce fichier excel est invalide, veuillez le remplacer');
                     }
 
-
-                    // Verifier si on est plus a la premiere ligne
-                    if( $row->getRowIndex() == 1 )
-                        continue;
+                    if ($row->getRowIndex() == 1) continue;
 
                     $nb = $rowData[0];
                     $matricule = trim($rowData[1]);
                     $nom = $rowData[2];
                     $prenom = $rowData[3];
+                    $sexe = $rowData[8];
 
-                    if( $nb === null) {
-                        break;
+                    if ($nb === null) break;
+
+                    if ($studentRepository->findOneBy(['matricule' => $matricule])) {
+                        throw new \Exception("Ce fichier contient un étudiant déjà inscrit ($matricule) ligne : $nb");
                     }
 
-                    if( $studentRepository->findOneBy(['matricule' => $matricule]) != null ){
-                        $this->addFlash('warning', 'Ce fichier contient un etudiant déja inscrit !');
-                        return $this->redirectToRoute('app_etudiant_index');
-                    };
-
-
-                    if( preg_match('/^\d{12}$/', $matricule) === 0){
-                        $this->addFlash('warning', "Ce fichier excel contient un matricule invalide. Matricule $matricule. Ligne : {$rowData[0]}");
-                        return $this->redirectToRoute('app_etudiant_index');
+                    if (preg_match('/^\d{12}$/', $matricule) === 0) {
+                        throw new \Exception("Matricule invalide : $matricule. Ligne : $nb");
                     }
 
-                    $rowData = [$matricule, $nom, $prenom];
-                    $data[] = $rowData;
+                    if (!in_array($sexe, ['M', 'F'])) {
+                        throw new \Exception("Sexe invalide : $sexe. Matricule : $matricule. Ligne : $nb");
+                    }
+
+                    $data[] = [$matricule, $nom, $prenom, $sexe];
                 }
 
-                foreach ($data as $dt){
+                foreach ($data as $dt) {
                     $std = new Etudiant();
                     $std->setMatricule($dt[0]);
                     $std->setNom($dt[1]);
                     $std->setPrenom($dt[2]);
+                    $std->setSexe($dt[3]);
                     $em->persist($std);
-                    $em->flush();
 
                     $inscription = new Inscription();
-                    $inscription->setProgramme($programme);
+                    $inscription->setProgramme($matiere->getUniteEnseignement()->getProgramme());
                     $inscription->setEtudiant($std);
-                    $inscription->setAnnee($annee);
+                    $inscription->setAnnee($em->getRepository(Annee::class)->findOneBy(['is_progress' => true]));
+                    $inscription->setClasse($em->getRepository(Classe::class)->findOneBy([
+                        'id' => Constant::semestreToClassId($matiere->getUniteEnseignement()->getSemestre()->getName())
+                    ]));
                     $em->persist($inscription);
 
-                    /** @var UniteEnseignement[] $unite_enseignements */
-                    $unite_enseignements = $em->getRepository(UniteEnseignement::class)->findBy(['programme' => $programme]);
-                    foreach ($unite_enseignements as $unite_enseignement){
-                        /** @var Matiere[] $matieres */
+                    $unite_enseignements = $em->getRepository(UniteEnseignement::class)->findBy([
+                        'programme' => $matiere->getUniteEnseignement()->getProgramme()
+                    ]);
+                    foreach ($unite_enseignements as $unite_enseignement) {
                         $matieres = $em->getRepository(Matiere::class)->findBy(['uniteEnseignement' => $unite_enseignement]);
-                        foreach ($matieres as $m){
+                        foreach ($matieres as $m) {
                             $note = new Note();
                             $note->setMatiere($m);
                             $note->setStudent($std);
@@ -158,31 +155,34 @@ class RapportController extends AbstractController
                             $note->setNote2(0);
                             $note->setNote3(0);
                             $em->persist($note);
-                            $em->flush();
                         }
                     }
+
+                    $em->flush();
                 }
 
-                // Sauvegarder un Rapport
                 $rapport = new Rapport();
                 $rapport->setFilename($newFilename);
                 $rapport->setType(xtnsionConstant::EXCEL_FILE_XTNSION->value);
                 $rapport->setCreatedAt(new \DateTimeImmutable());
-
                 $rapport->setUpdatedAt(new \DateTimeImmutable());
                 $rapport->setUser($security->getUser());
 
                 $em->persist($rapport);
                 $em->flush();
+                $em->clear();
 
+                $em->getConnection()->commit(); // ✅ VALIDER
                 $this->addFlash('success', 'Rapport importé avec succès');
                 return $this->redirectToRoute('app_etudiant_index');
-            }
-        }
 
-        return $this->render('rapport/import.html.twig', [
-            'form' => $form->createView(),
-        ]);
+            }
+
+        } catch (\Throwable $e) {
+            $em->getConnection()->rollBack(); // ❌ ANNULER
+            $this->addFlash('danger', 'Une erreur est survenue : ' . $e->getMessage());
+        }
+        return $this->redirectToRoute('app_etudiant_index');
     }
 
     #[Route(name: 'app_rapport_index', methods: ['GET'])]

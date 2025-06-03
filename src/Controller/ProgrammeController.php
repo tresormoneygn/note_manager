@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\Programme;
 use App\Form\ProgrammeType;
+use App\Repository\AnneeRepository;
 use App\Repository\ProgrammeRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -28,7 +29,7 @@ class ProgrammeController extends AbstractController
 
     #[Route('/new', name: 'app_programme_new', methods: ['GET', 'POST'])]
     #[IsGranted('ROLE_DG')]
-    public function new(Request $request, EntityManagerInterface $entityManager, ProgrammeRepository $programmeRepository): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ProgrammeRepository $programmeRepository, AnneeRepository $anneeRepository): Response
     {
         $programme = new Programme();
         $form = $this->createForm(ProgrammeType::class, $programme);
@@ -59,6 +60,12 @@ class ProgrammeController extends AbstractController
                 if ($exist) {
                     $this->addFlash('error', 'Un programme avec ce label ou ce nom existe déjà pour cette année et ce département.');
                 } else {
+                    // Recuperer l'année en cours avec le annee repostitory
+                    $anneeEnCours = $anneeRepository->findOneBy(['is_progress' => true]);
+                    $now = new \DateTimeImmutable();
+                    $programme->setCreatedAt($now);
+                    $programme->setUpdatedAt($now);
+                    $programme->setAnnee($anneeEnCours);
                     $entityManager->persist($programme);
                     $entityManager->flush();
             

@@ -44,11 +44,22 @@ class EtudiantRepository extends ServiceEntityRepository
         $qb = $this->createQueryBuilder('e');
 
         if (!empty($matricule)) {
+            $qb->andWhere('e.matricule LIKE :matricule')
+                ->setParameter('matricule', '%' . $matricule . '%');
         }
+
         if (!empty($nom)) {
+            $qb->andWhere('e.nom LIKE :nom')
+                ->setParameter('nom', '%' . $nom . '%');
         }
+
         if (!empty($matiere)) {
+            $qb->join('e.notes', 'n') // si Etudiant a une relation "notes"
+            ->andWhere('n.matiere = :matiere')
+                ->setParameter('matiere', $matiere);
         }
+
         return $qb;
     }
+
 }

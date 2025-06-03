@@ -29,7 +29,7 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, Security $security, EntityManagerInterface $entityManager, RoleFonctionManager $roleFonctionManager): Response
+    public function register(Request $request, UserPasswordHasherInterface $userPasswordHasher, UserRepository $userRepository, EntityManagerInterface $entityManager, RoleFonctionManager $roleFonctionManager): Response
     {
         // Cette route est accessible à tous
         $user = new User();
@@ -37,36 +37,41 @@ class RegistrationController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            /** @var string $plainPassword */
-            $plainPassword = $form->get('plainPassword')->getData();
-            
-            // Les fonctions sont déjà attribuées à l'utilisateur via le formulaire
-            // Les rôles seront automatiquement générés à partir des fonctions dans la méthode getRoles()
-            // Nous n'avons donc pas besoin d'attribuer manuellement des rôles ici
-            $user->setRoles(['ROLE_USER']);
-            
-            // Si des rôles spécifiques sont attribués, synchroniser les fonctions correspondantes
-            $roleFonctionManager->synchronizeFonctionsFromRoles($user);
+            try {
+                /** @var string $plainPassword */
+                $plainPassword = $form->get('plainPassword')->getData();
 
-            // encode the plain password
-            $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
+                // Les fonctions sont déjà attribuées à l'utilisateur via le formulaire
+                // Les rôles seront automatiquement générés à partir des fonctions dans la méthode getRoles()
+                // Nous n'avons donc pas besoin d'attribuer manuellement des rôles ici
+                $user->setRoles(['ROLE_USER']);
 
-            $entityManager->persist($user);
-            $entityManager->flush();
+                // Si des rôles spécifiques sont attribués, synchroniser les fonctions correspondantes
+                $roleFonctionManager->synchronizeFonctionsFromRoles($user);
 
-            // generate a signed url and email it to the user
-            $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
-                (new TemplatedEmail())
-                    ->from(new Address('jeankelouaouamouno71@gmail.com', 'NoteManage Uganc'))
-                    ->to((string) $user->getEmail())
-                    ->subject('Please Confirm your Email')
-                    ->htmlTemplate('registration/confirmation_email.html.twig')
-            );
+                // encode the plain password
+                $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
-            // do anything else you need here, like send an email
+                $entityManager->persist($user);
+                $entityManager->flush();
 
-            return $security->login($user, UserAuthenticator::class, 'main');
-            
+                // generate a signed url and email it to the user
+                $this->emailVerifier->sendEmailConfirmation('app_verify_email', $user,
+                    (new TemplatedEmail())
+                        ->from(new Address('jeankelouaouamouno71@gmail.com', 'NoteManage Uganc'))
+                        ->to((string) $user->getEmail())
+                        ->subject('Please Confirm your Email')
+                        ->htmlTemplate('registration/confirmation_email.html.twig')
+                );
+
+                // Ajouter un message de success dans la session
+                $this->addFlash('success', 'Utilisateur créé avec succès.');
+                return $this->render('user/index.html.twig', [
+                    'users' => $userRepository->findAll(),
+                ]);
+            } catch (\Throwable $e) {
+                $this->addFlash('danger', 'Une erreur est survenue : ' . $e->getMessage());
+            }
         }
 
         return $this->render('registration/register.html.twig', [

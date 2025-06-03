@@ -74,7 +74,7 @@ class EtudiantController extends AbstractController
     }
 
     #[Route('/new', name: 'app_etudiant_new', methods: ['GET', 'POST'])]
-    #[IsGranted('ROLE_ADMIN')]
+    #[Security("is_granted('ROLE_DG') or is_granted('ROLE_DGA_E')")]
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $etudiant = new Etudiant();

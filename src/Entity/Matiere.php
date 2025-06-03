@@ -15,7 +15,7 @@ class Matiere
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(length: 45)]
+    #[ORM\Column(length: 45, nullable: true)]
     private ?string $name = null;
 
     #[ORM\ManyToOne(inversedBy: 'matieres')]

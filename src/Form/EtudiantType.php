@@ -38,6 +38,15 @@ class EtudiantType extends AbstractType
                 ],
                 'label_attr' => ['class' => 'block text-sm font-medium text-gray-700']
             ])
+            ->add('sexe', ChoiceType::class, [
+                'choices' => [
+                    'Masculin' => 'M',
+                    'Féminin' => 'F',
+                ],
+                'label' => 'Sexe',
+                'expanded' => true, // boutons radio
+                'multiple' => false,
+            ])
             ->add('date_naissance', DateType::class, [
                 'required' => false,
                 'widget' => 'single_text',

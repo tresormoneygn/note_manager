@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\User;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Security\Core\Exception\UnsupportedUserException;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -57,4 +58,13 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     //            ->getOneOrNullResult()
     //        ;
     //    }
+    // Dans UserRepository.php
+    public function findByFonctionQueryBuilder(string $fonctionLabel): QueryBuilder
+    {
+        return $this->createQueryBuilder('u')
+            ->join('u.fonctions', 'f') // Jointure avec la table Fonction
+            ->where('f.label = :fonctionLabel')
+            ->setParameter('fonctionLabel', $fonctionLabel)
+            ->orderBy('u.email', 'ASC');
+    }
 }

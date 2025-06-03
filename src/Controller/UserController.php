@@ -34,13 +34,24 @@ class UserController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            // Synchroniser les fonctions en fonction des rôles sélectionnés
-            $roleFonctionManager->synchronizeFonctionsFromRoles($user);
-            
-            $entityManager->persist($user);
-            $entityManager->flush();
+            try {
+                // Synchroniser les fonctions en fonction des rôles sélectionnés
+                $roleFonctionManager->synchronizeFonctionsFromRoles($user);
 
-            return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+                $entityManager->persist($user);
+                $entityManager->flush();
+
+                $this->addFlash('success', 'Utilisateur créé avec succès.');
+                return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);
+            } catch (\Throwable $e) {
+                $this->addFlash('danger', 'Une erreur est survenue : ' . $e->getMessage());
+
+                // Rediriger vers la même page pour réafficher le formulaire avec les valeurs déjà saisies
+                return $this->render('user/new.html.twig', [
+                    'user' => $user,
+                    'form' => $form,
+                ]);
+            }
         }
 
         return $this->render('user/new.html.twig', [
@@ -66,7 +77,7 @@ class UserController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             // Synchroniser les fonctions en fonction des rôles sélectionnés
             $roleFonctionManager->synchronizeFonctionsFromRoles($user);
-            
+
             $entityManager->flush();
 
             return $this->redirectToRoute('app_user_index', [], Response::HTTP_SEE_OTHER);

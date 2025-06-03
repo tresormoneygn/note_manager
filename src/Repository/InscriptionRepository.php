@@ -38,4 +38,17 @@ class InscriptionRepository extends ServiceEntityRepository
             $this->getEntityManager()->flush();
         }
     }
+
+
+    public function findByAnnee(string $annee): array
+    {
+        return $this->createQueryBuilder('i')
+            ->join('i.annee', 'a')
+            ->addSelect('a')
+            ->andWhere('a.name = :annee')
+            ->setParameter('annee', $annee)
+            ->getQuery()
+            ->getResult();
+    }
+
 }

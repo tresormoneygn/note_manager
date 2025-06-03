@@ -61,18 +61,24 @@ security:
     access_control:
         # Routes d'inscription (réservées au DG)
         - { path: ^/register, roles: ROLE_DG }
+
+        # Routes des utilisateurs
+        - { path: ^/user, roles: [ROLE_DG, ROLE_DGA_E]}
         
         # Routes de gestion des programmes et départements (réservées au DG et DGA/E)
         - { path: ^/programme/new, roles: ROLE_DG }
         - { path: ^/programme/.*/edit, roles: ROLE_DG }
-        - { path: ^/departement/new, roles: ROLE_DGA_E }
-        - { path: ^/departement/.*/edit, roles: ROLE_DGA_E }
+        - { path: ^/departement/new, roles: ROLE_DG }
+        - { path: ^/departement/.*/edit, roles: ROLE_DG }
         
         # Routes de gestion des matières et unités d'enseignement
-        - { path: ^/matiere/new, roles: ROLE_DP }                       # Directeurs de Programme
-        - { path: ^/matiere/.*/edit, roles: ROLE_DP }                  # Directeurs de Programme
-        - { path: ^/unite/enseignement/new, roles: ROLE_DP }           # Directeurs de Programme
-        - { path: ^/unite/enseignement/.*/edit, roles: ROLE_DP }       # Directeurs de Programme
+        - { path: ^/matiere/new, roles: [ROLE_DG, ROLE_DP] }                       # Directeurs de Programme
+        - { path: ^/matiere/.*/edit, roles: [ROLE_DG, ROLE_DP] }                  # Directeurs de Programme
+        - { path: ^/unite/enseignement/new, roles: [ROLE_DG, ROLE_DP] }           # Directeurs de Programme
+        - { path: ^/unite/enseignement/.*/edit, roles: [ROLE_DG, ROLE_DP] }       # Directeurs de Programme
+
+        # Routes pour l'import des etudiants
+        - { path: ^/rapport/import-rapport, roles: [ROLE_P] }                       # Directeurs de Programme
         
         # Routes de gestion de l'emploi du temps
         - { path: ^/emploi-du-temps/new, roles: ROLE_DP }              # Directeurs de Programme

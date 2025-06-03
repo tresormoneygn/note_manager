@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Programme{% endblock %}
+{% block title %}NoteManager - Création Programme{% endblock %}
 
 {% block body %}
-    <h1>Create new Programme</h1>
+    <h1 class="text-center">Création d'un Nouveau Programme {{ get_annee_en_cours().name }} </h1>
     {# Affichage des messages flashs #}
     {% for label, messages in app.flashes %}
         {% for message in messages %}
@@ -15,5 +15,9 @@
 
     {{ include('programme/_form.html.twig') }}
 
-    <a href="{{ path('app_programme_index') }}">back to list</a>
+    <a href="{{ path('app_programme_index') }}"
+       class="inline-flex items-center my-2 px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition duration-150 ease-in-out"
+    >
+        Rétourner
+    </a>
 {% endblock %}

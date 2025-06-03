@@ -1,9 +1,9 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Programme index{% endblock %}
+{% block title %}NoteManager - Programme{% endblock %}
 
 {% block body %}
-    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Programme index</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Affichages des Programmes</h1>
 
     <div class="overflow-x-auto">
         <table class="min-w-full bg-white rounded-lg shadow-md">
@@ -23,9 +23,34 @@
                     <td class="py-4 px-6">{{ programme.name }}</td>
                     <td class="py-4 px-6">{{ programme.createdAt ? programme.createdAt|date('Y-m-d H:i:s') : '' }}</td>
                     <td class="py-4 px-6">{{ programme.updatedAt ? programme.updatedAt|date('Y-m-d H:i:s') : '' }}</td>
-                    <td class="py-4 px-6 flex space-x-2">
-                        <a href="{{ path('app_programme_show', {'id': programme.id}) }}" class="text-blue-600 hover:underline">Show</a>
-                        <a href="{{ path('app_programme_edit', {'id': programme.id}) }}" class="text-yellow-500 hover:underline">Edit</a>
+                    <td class="py-4 px-6">
+                        <div class="flex space-x-3">
+                            <!-- Bouton Show avec icône oeil -->
+                            <a href="{{ path('app_programme_show', {'id': programme.id}) }}"
+                               class="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                               title="Voir détails">
+                                <i class="fas fa-eye"></i>
+                            </a>
+
+                            <!-- Bouton Edit avec icône crayon -->
+                            <a href="{{ path('app_programme_edit', {'id': programme.id}) }}"
+                               class="text-yellow-500 hover:text-yellow-700 transition-colors duration-200"
+                               title="Modifier">
+                                <i class="fas fa-pencil-alt"></i>
+                            </a>
+
+                            <!-- Optionnel : Bouton Delete avec icône poubelle -->
+                            <form method="post" action="{{ path('app_programme_delete', {'id': programme.id}) }}"
+                                  onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce programme ?');"
+                                  class="inline">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ programme.id) }}">
+                                <button type="submit"
+                                        class="text-red-500 hover:text-red-700 transition-colors duration-200"
+                                        title="Supprimer">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
             {% else %}
@@ -37,9 +62,9 @@
         </table>
     </div>
 
-    <div class="mt-6 text-center">
-        <a href="{{ path('app_programme_new') }}" class="inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
-            Create new
+    <div class="mt-6">
+        <a href="{{ path('app_programme_new') }}" class="inline-block bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            Création d'un Programme
         </a>
     </div>
 {% endblock %}

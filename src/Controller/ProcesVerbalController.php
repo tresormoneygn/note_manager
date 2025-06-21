@@ -1,6 +1,5 @@
 <?php
 
-// src/Controller/ProcesVerbalController.php
 namespace App\Controller;
 
 use App\Service\ProcesVerbalService;
@@ -10,10 +9,12 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\ResponseHeaderBag;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 class ProcesVerbalController extends AbstractController
 {
-    #[Route('/proces-verbal/excel', name: 'proces_verbal_excel')]
+    #[Route('/proces-verbal/excel', name: 'app_proces_verbal_excel')]
+    #[IsGranted('ROLE_DP')]
     public function procesVerbal(ProcesVerbalService $procesVerbalService): Response
     {
         $annee = date('Y'); // ou récupérer dynamiquement depuis la BDD
@@ -23,10 +24,11 @@ class ProcesVerbalController extends AbstractController
         $temp_file = tempnam(sys_get_temp_dir(), 'proces_verbal');
         $writer->save($temp_file);
 
-        return $this->file($temp_file, "proces-verbal-$annee.xlsx", ResponseHeaderBag::DISPOSITION_INLINE);
+        return $this->file($temp_file, "proces-verbal-$annee.xlsx", ResponseHeaderBag::DISPOSITION_ATTACHMENT);
     }
 
-    #[Route('/proces-verbal/{annee}', name: 'proces_verbal_excel_annee')]
+    #[Route('/proces-verbal/{annee}', name: 'app_proces_verbal_excel_annee')]
+    #[IsGranted('ROLE_DP')]
     public function exportProcesVerbalExcel(
         $annee,
         ProcesVerbalService $procesVerbalService

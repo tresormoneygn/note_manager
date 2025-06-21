@@ -7,6 +7,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: NoteRepository::class)]
+#[ORM\HasLifecycleCallbacks]
 class Note
 {
     #[ORM\Id]
@@ -47,8 +48,28 @@ class Note
         $this->created_at = new \DateTimeImmutable();
         $this->updated_at = new \DateTimeImmutable();
         $this->max_delay = null;
-        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
-        $this->setMoyenne($moyenne);
+        $this->note_1 = 0;
+        $this->note_2 = 0;
+        $this->note_3 = 0;
+        $this->calculerMoyenne();
+    }
+
+    #[ORM\PrePersist]
+    #[ORM\PreUpdate]
+    public function updateTimestamps(): void
+    {
+        $this->updated_at = new \DateTimeImmutable();
+        if ($this->created_at === null) {
+            $this->created_at = new \DateTimeImmutable();
+        }
+        $this->calculerMoyenne();
+    }
+
+    private function calculerMoyenne(): void
+    {
+        if ($this->note_1 !== null && $this->note_2 !== null && $this->note_3 !== null) {
+            $this->moyenne = ($this->note_1 * 0.3) + ($this->note_2 * 0.3) + ($this->note_3 * 0.4);
+        }
     }
 
     public function getId(): ?int
@@ -64,8 +85,7 @@ class Note
     public function setNote1(float $note_1): static
     {
         $this->note_1 = $note_1;
-        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
-        $this->setMoyenne($moyenne);
+        $this->calculerMoyenne();
         return $this;
     }
 
@@ -77,8 +97,7 @@ class Note
     public function setNote2(float $note_2): static
     {
         $this->note_2 = $note_2;
-        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
-        $this->setMoyenne($moyenne);
+        $this->calculerMoyenne();
         return $this;
     }
 
@@ -90,8 +109,7 @@ class Note
     public function setNote3(float $note_3): static
     {
         $this->note_3 = $note_3;
-        $moyenne = ($this->note_1*0.3) + ($this->note_2*0.3) + ($this->note_3*0.4);
-        $this->setMoyenne($moyenne);
+        $this->calculerMoyenne();
         return $this;
     }
 
@@ -148,7 +166,7 @@ class Note
         return $this->max_delay;
     }
 
-    public function setMaxDelay(\DateTimeInterface $max_delay): static
+    public function setMaxDelay(?\DateTimeInterface $max_delay): static
     {
         $this->max_delay = $max_delay;
 
@@ -166,7 +184,4 @@ class Note
 
         return $this;
     }
-
-
-    
 }

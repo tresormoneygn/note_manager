@@ -3,9 +3,9 @@
 namespace App\Service;
 
 use App\Repository\DepartementHistoriqueRepository;
-use App\Repository\DepartementRepository;
 use App\Repository\InscriptionRepository;
 use App\Repository\NoteRepository;
+use App\Repository\AnneeRepository;
 
 class StatistiquesService
 {
@@ -13,136 +13,137 @@ class StatistiquesService
         private DepartementHistoriqueRepository $departementRepo,
         private InscriptionRepository $inscriptionRepo,
         private NoteRepository $noteRepo,
+        private AnneeRepository $anneeRepo,
     ) {}
 
     public function genererStatistiques(): array
     {
         $stats = [];
-        $departements = $this->departementRepo->findAll();
+        
+        // Récupérer l'année en cours
+        $anneeEnCours = $this->anneeRepo->findOneBy(['is_progress' => true]);
+        if (!$anneeEnCours) {
+            return $stats;
+        }
 
-        foreach ($departements as $departement) {
-            $programmes = $departement->getProgrammes();
+        // Récupérer toutes les inscriptions pour l'année en cours
+        $inscriptions = $this->inscriptionRepo->findBy(['annee' => $anneeEnCours]);
+        
+        // Grouper par niveau (Programme + Classe)
+        $niveaux = [];
+        foreach ($inscriptions as $inscription) {
+            $programme = $inscription->getProgramme();
+            $classe = $inscription->getClasse();
+            $niveau = $programme->getLabel() . ' L' . $classe->getName();
+            
+            if (!isset($niveaux[$niveau])) {
+                $niveaux[$niveau] = [];
+            }
+            $niveaux[$niveau][] = $inscription;
+        }
 
-            foreach ($programmes as $programme) {
-                // Get unique classes for this programme through inscriptions
-                $inscriptions = $this->inscriptionRepo->findBy(['programme' => $programme]);
-                $classes = [];
-                foreach ($inscriptions as $inscription) {
-                    $classe = $inscription->getClasse();
-                    if (!in_array($classe, $classes)) {
-                        $classes[] = $classe;
+        foreach ($niveaux as $niveau => $inscriptionsNiveau) {
+            $totalInscrits = count($inscriptionsNiveau);
+            $fillesInscrites = 0;
+            $totalEvalues = 0;
+            $fillesEvalues = 0;
+            $admis = 0;
+            $fillesAdmis = 0;
+            $coursNonValides = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, '>=5' => 0];
+            $repartitionNotes = ['0-5' => 0, '5-10' => 0, '10-15' => 0, '15-20' => 0];
+
+            foreach ($inscriptionsNiveau as $inscription) {
+                $etudiant = $inscription->getEtudiant();
+                $isFille = strtoupper($etudiant->getSexe()) === 'F';
+
+                if ($isFille) $fillesInscrites++;
+
+                $notes = $etudiant->getNotes();
+                $nbMatiere = 0;
+                $nbValide = 0;
+                $nbInvalide = 0;
+                $estEvalue = false;
+                $moyenneEtudiant = 0;
+                $totalNotes = 0;
+
+                foreach ($notes as $note) {
+                    $n1 = $note->getNote1();
+                    $n2 = $note->getNote2();
+                    $n3 = $note->getNote3();
+
+                    if ($n1 != 0 || $n2 != 0 || $n3 != 0) {
+                        $estEvalue = true;
+                        $moyenne = ($n1 * 0.3) + ($n2 * 0.3) + ($n3 * 0.4);
+                        $moyenneEtudiant += $moyenne;
+                        $totalNotes++;
+                        
+                        if ($moyenne >= 10) {
+                            $nbValide++;
+                        } else {
+                            $nbInvalide++;
+                        }
+                        $nbMatiere++;
                     }
                 }
 
-                foreach ($classes as $classe) {
-                    $niveau = $departement->getDepartement()->getName() . ' ' . $classe->getName();
+                if ($estEvalue) {
+                    $totalEvalues++;
+                    if ($isFille) $fillesEvalues++;
 
-                    $inscriptions = $this->inscriptionRepo->findBy([
-                        'programme' => $programme,
-                        'classe' => $classe
-                    ]);
-
-                    $totalInscrits = count($inscriptions);
-                    $fillesInscrites = 0;
-                    $totalEvalues = 0;
-                    $fillesEvalues = 0;
-                    $admis = 0;
-                    $fillesAdmis = 0;
-                    $coursNonValides = [1 => 0, 2 => 0, 3 => 0, 4 => 0, 5 => 0, '>=5' => 0];
-                    $repartitionNotes = ['0-5' => 0, '5-10' => 0, '10-15' => 0, '15-20' => 0];
-
-                    foreach ($inscriptions as $inscription) {
-                        $etudiant = $inscription->getEtudiant();
-                        $isFille = strtoupper($etudiant->getSexe()) === 'F';
-
-                        if ($isFille) $fillesInscrites++;
-
-                        $notes = $etudiant->getNotes();
-                        $nbMatiere = 0;
-                        $nbValide = 0;
-                        $nbInvalide = 0;
-                        $estEvalue = false;
-                        $moyenneEtudiant = 0;
-                        $totalNotes = 0;
-
-                        foreach ($notes as $note) {
-                            $n1 = $note->getNote1();
-                            $n2 = $note->getNote2();
-                            $n3 = $note->getNote3();
-
-                            if ($n1 != 0 || $n2 != 0 || $n3 != 0) {
-                                $estEvalue = true;
-                                $moyenne = ($n1 + $n2 + $n3) / 3;
-                                $moyenneEtudiant += $moyenne;
-                                $totalNotes++;
-                                
-                                if ($moyenne >= 10) {
-                                    $nbValide++;
-                                } else {
-                                    $nbInvalide++;
-                                }
-                                $nbMatiere++;
-                            }
+                    if ($nbMatiere > 0) {
+                        $moyenneFinale = $moyenneEtudiant / $totalNotes;
+                        
+                        // Répartition des moyennes
+                        if ($moyenneFinale < 5) {
+                            $repartitionNotes['0-5']++;
+                        } elseif ($moyenneFinale < 10) {
+                            $repartitionNotes['5-10']++;
+                        } elseif ($moyenneFinale < 15) {
+                            $repartitionNotes['10-15']++;
+                        } else {
+                            $repartitionNotes['15-20']++;
                         }
 
-                        if ($estEvalue) {
-                            $totalEvalues++;
-                            if ($isFille) $fillesEvalues++;
-
-                            if ($nbMatiere > 0) {
-                                $moyenneFinale = $moyenneEtudiant / $totalNotes;
-                                
-                                // Répartition des moyennes
-                                if ($moyenneFinale < 5) {
-                                    $repartitionNotes['0-5']++;
-                                } elseif ($moyenneFinale < 10) {
-                                    $repartitionNotes['5-10']++;
-                                } elseif ($moyenneFinale < 15) {
-                                    $repartitionNotes['10-15']++;
-                                } else {
-                                    $repartitionNotes['15-20']++;
-                                }
-
-                                if ($nbValide / $nbMatiere >= 0.5) {
-                                    $admis++;
-                                    if ($isFille) $fillesAdmis++;
-                                }
-                            }
-
-                            if ($nbInvalide > 0) {
-                                if ($nbInvalide >= 5) {
-                                    $coursNonValides['>=5']++;
-                                } else {
-                                    $coursNonValides[$nbInvalide]++;
-                                }
-                            }
+                        // Vérifier si admis (au moins 50% des matières validées)
+                        if ($nbMatiere > 0 && ($nbValide / $nbMatiere) >= 0.5) {
+                            $admis++;
+                            if ($isFille) $fillesAdmis++;
                         }
                     }
 
-                    $stats[$niveau] = [
-                        'effectif_inscrit' => [
-                            'total' => $totalInscrits,
-                            'filles' => $fillesInscrites
-                        ],
-                        'effectif_evalue' => [
-                            'total' => $totalEvalues,
-                            'filles' => $fillesEvalues
-                        ],
-                        'admis' => [
-                            'nbre_admis' => $admis,
-                            'filles_admises' => $fillesAdmis,
-                            'pourcentage_total' => $totalInscrits > 0 ? round(($admis / $totalInscrits) * 100, 2) : 0,
-                            'pourcentage_filles' => $fillesInscrites > 0 ? round(($fillesAdmis / $fillesInscrites) * 100, 2) : 0
-                        ],
-                        'cours_non_valides' => $coursNonValides,
-                        'repartition_notes' => $repartitionNotes,
-                        'abandons' => [
-                            'total' => $totalInscrits - $totalEvalues,
-                            'filles' => $fillesInscrites - $fillesEvalues
-                        ]
-                    ];
+                    // Compter les cours non validés
+                    if ($nbInvalide > 0) {
+                        if ($nbInvalide >= 5) {
+                            $coursNonValides['>=5']++;
+                        } else {
+                            $coursNonValides[$nbInvalide]++;
+                        }
+                    }
                 }
             }
+
+            $stats[$niveau] = [
+                'effectif_inscrit' => [
+                    'total' => $totalInscrits,
+                    'filles' => $fillesInscrites
+                ],
+                'effectif_evalue' => [
+                    'total' => $totalEvalues,
+                    'filles' => $fillesEvalues
+                ],
+                'admis' => [
+                    'nbre_admis' => $admis,
+                    'filles_admises' => $fillesAdmis,
+                    'pourcentage_total' => $totalInscrits > 0 ? round(($admis / $totalInscrits) * 100, 2) : 0,
+                    'pourcentage_filles' => $fillesInscrites > 0 ? round(($fillesAdmis / $fillesInscrites) * 100, 2) : 0
+                ],
+                'cours_non_valides' => $coursNonValides,
+                'repartition_notes' => $repartitionNotes,
+                'abandons' => [
+                    'total' => $totalInscrits - $totalEvalues,
+                    'filles' => $fillesInscrites - $fillesEvalues
+                ]
+            ];
         }
 
         return $stats;
@@ -177,7 +178,7 @@ class StatistiquesService
         
         foreach ($notes as $note) {
             if ($note->getNote1() != 0 || $note->getNote2() != 0 || $note->getNote3() != 0) {
-                $moyenne = ($note->getNote1() + $note->getNote2() + $note->getNote3()) / 3;
+                $moyenne = ($note->getNote1() * 0.3) + ($note->getNote2() * 0.3) + ($note->getNote3() * 0.4);
                 $sommeNotes += $moyenne;
                 $totalNotes++;
             }

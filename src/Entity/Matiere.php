@@ -50,9 +50,9 @@ class Matiere
         return $this->name;
     }
 
-    public function setName(string $name): static
+    public function setName(?string $name): static
     {
-        $this->$name = $name;
+        $this->name = $name;
 
         return $this;
     }
@@ -121,5 +121,10 @@ class Matiere
         $this->user = $user;
 
         return $this;
+    }
+
+    public function __toString(): string
+    {
+        return $this->name ?? '';
     }
 }

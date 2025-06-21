@@ -38,26 +38,33 @@ final class NoteController extends AbstractController
         PaginatorInterface $paginator,
     ): Response
     {
+        $user = $security->getUser();
+        $userMatieres = $matiereRepository->findBy(['user' => $user]);
+        
         $form = $this->createForm(FiltreNoteType::class, null, [
-            'method' => 'GET'
+            'method' => 'GET',
+            'user_matieres' => $userMatieres
         ]);
         $form->handleRequest($request);
 
         $notes = [];
         $stats = [];
 
-
         if ($form->isSubmitted() && $form->isValid()) {
             $data = $form->getData();
             $matricule = $data['matricule'] ?? null;
             $nom = $data['nom'] ?? null;
             $annee = $data['annee'] ?? null;
+            $matiere = $data['matiere'] ?? null;
 
-            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee);
-            // Calculer les statistiques des notes
-            //$stats = $this->calculateStatistics($notes);
+            $notes = $noteRepository->filtrerNote($matricule, $nom, $annee, $matiere);
         } else {
-            $notes = $noteRepository->findAll();
+            // Get only notes for subjects taught by the connected professor
+            $notes = $noteRepository->createQueryBuilder('n')
+                ->where('n.matiere IN (:matieres)')
+                ->setParameter('matieres', $userMatieres)
+                ->getQuery()
+                ->getResult();
         }
 
         // Paginer les résultats
@@ -72,12 +79,11 @@ final class NoteController extends AbstractController
         );
 
 
-        $user = $security->getUser();
         $stats = $this->calculateStatistics($notes->getItems() ?? []);
         return $this->render('note/index.html.twig', [
             'form' => $form->createView(),
             'notes' => $notes,
-            'matieres' => $user->getMatieres(),
+            'matieres' => $userMatieres,
             'intervals' => $stats['intervals'],
             'types' => $stats['types'],
         ]);
@@ -94,11 +100,11 @@ final class NoteController extends AbstractController
 
     public function afficherStatistiques(NoteRepository $noteRepository): Response
     {
-        $notes = $noteRepository->findAll(); // Ou selon ton filtre
-        $noteData = $this->calculateNoteStatistics($notes);
+        $notes = $noteRepository->findAll();
+        $stats = $this->calculateStatistics($notes);
 
-        return $this->render('app_note_index', [], Response::HTTP_SEE_OTHER, [
-            'noteData' => $noteData
+        return $this->render('note/index.html.twig', [
+            'noteData' => $stats
         ]);
     }
 
@@ -275,8 +281,7 @@ final class NoteController extends AbstractController
                 ($rowData[4] !== FileConstant::EXCEL_FILE_NOTE_1->value and $row->getRowIndex() == 1) or
                 ($rowData[5] !== FileConstant::EXCEL_FILE_NOTE_2->value and $row->getRowIndex() == 1) or
                 ($rowData[6] !== FileConstant::EXCEL_FILE_NOTE_3->value and $row->getRowIndex() == 1) or
-                ($rowData[7] !== FileConstant::EXCEL_FILE_MOYENNE->value and $row->getRowIndex() == 1) or
-                ($rowData[8] !== FileConstant::EXCEL_FILE_SEXE->value and $row->getRowIndex() == 1)
+                ($rowData[7] !== FileConstant::EXCEL_FILE_MOYENNE->value and $row->getRowIndex() == 1)
             ){
                 $this->addFlash('warning', 'Ce fichier excel est invalide, veuillez le remplacer');
                 return $this->redirectToRoute('app_note_index');

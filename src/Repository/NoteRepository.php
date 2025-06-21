@@ -50,7 +50,7 @@ class NoteRepository extends ServiceEntityRepository
      */
 
 
-    public function filtrerNote(?string $matricule, ?string $nom, ?string $annee, $matiere): array
+    public function filtrerNote(?string $matricule, ?string $nom, ?string $annee, ?string $matiere): array
     {
         $qb = $this->createQueryBuilder('n')
             ->join('n.student', 's') // adapte le nom si nécessaire

@@ -143,80 +143,85 @@
 
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            // Diagramme de répartition des notes
-            const ctxDistribution = document.getElementById('gradesDistributionChart').getContext('2d');
-            const gradesDistributionChart = new Chart(ctxDistribution, {
-                type: 'pie',
-                data: {
-                    labels: ['0-5', '5-10', '10-15', '15-20'],
-                    datasets: [{
-                        label: 'Répartition des notes',
-                        data: [5, 15, 25, 10],
-                        backgroundColor: [
-                            '#EF4444', // Rouge pour 0-5
-                            '#F59E0B', // Orange pour 5-10
-                            '#3B82F6', // Bleu pour 10-15
-                            '#10B981'  // Vert pour 15-20
-                        ],
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `${context.label}: ${context.raw}% des étudiants`;
-                                }
-                            }
-                        }
-                    }
-                }
-            });
+            document.addEventListener("DOMContentLoaded", () => {
+                const distributionData = {{ gradeDistribution|json_encode|raw }};
+                const averagesData = {{ programAverages|json_encode|raw }};
 
-            // Diagramme des moyennes par filière
-            const ctxProgram = document.getElementById('gradesByProgramChart').getContext('2d');
-            const gradesByProgramChart = new Chart(ctxProgram, {
-                type: 'bar',
-                data: {
-                    labels: ['Informatique', 'Mathématiques', 'Physique', 'Chimie', 'Biologie'],
-                    datasets: [{
-                        label: 'Moyenne générale',
-                        data: [12.5, 14.2, 11.8, 13.6, 15.1],
-                        backgroundColor: '#4F46E5',
-                        borderColor: '#4F46E5',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 20,
-                            title: {
-                                display: true,
-                                text: 'Moyenne /20'
-                            }
-                        }
+                // Diagramme de répartition des notes
+                const ctxDistribution = document.getElementById('gradesDistributionChart').getContext('2d');
+                const gradesDistributionChart = new Chart(ctxDistribution, {
+                    type: 'pie',
+                    data: {
+                        labels: Object.keys(distributionData),
+                        datasets: [{
+                            label: 'Répartition des notes',
+                            data: Object.values(distributionData),
+                            backgroundColor: [
+                                '#EF4444', // Rouge pour 0-5
+                                '#F59E0B', // Orange pour 5-10
+                                '#3B82F6', // Bleu pour 10-15
+                                '#10B981'  // Vert pour 15-20
+                            ],
+                            borderWidth: 1
+                        }]
                     },
-                    plugins: {
-                        legend: {
-                            display: false
-                        },
-                        tooltip: {
-                            callbacks: {
-                                label: function(context) {
-                                    return `Moyenne: ${context.raw}/20`;
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `${context.label}: ${context.raw} étudiants`;
+                                    }
                                 }
                             }
                         }
                     }
-                }
+                });
+
+                // Diagramme des moyennes par filière
+                const ctxProgram = document.getElementById('gradesByProgramChart').getContext('2d');
+                const gradesByProgramChart = new Chart(ctxProgram, {
+                    type: 'bar',
+                    data: {
+                        labels: Object.keys(averagesData),
+                        datasets: [{
+                            label: 'Moyenne générale',
+                            data: Object.values(averagesData),
+                            backgroundColor: '#4F46E5',
+                            borderColor: '#4F46E5',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                max: 20,
+                                title: {
+                                    display: true,
+                                    text: 'Moyenne /20'
+                                }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return `Moyenne: ${context.raw}/20`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
             });
         </script>
 

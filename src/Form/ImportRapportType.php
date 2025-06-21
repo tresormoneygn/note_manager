@@ -44,7 +44,9 @@ class ImportRapportType extends AbstractType
             ])
             ->add('matiere', EntityType::class, [
                 'class' => Matiere::class,
-                'choice_label' => 'name',
+                'choice_label' => function(Matiere $matiere) {
+                    return $matiere->getName() . ' (' . $matiere->getUniteEnseignement()->getProgramme()->getName(). ')';
+                },
                 'required' => true,
                 'placeholder' => '-- Choisir une matière --',
                 'label' => 'Matière',

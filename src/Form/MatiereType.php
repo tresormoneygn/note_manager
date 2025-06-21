@@ -40,7 +40,9 @@ class MatiereType extends AbstractType
             ])
             ->add('uniteEnseignement', EntityType::class, [
                 'class' => UniteEnseignement::class,
-                'choice_label' => 'nom',
+                'choice_label' => function(UniteEnseignement $uniteEnseignement) {
+                    return $uniteEnseignement->getNom() . ' (' . $uniteEnseignement->getProgramme()->getName(). ')';
+                },
                 'attr' => [
                     'class' => 'w-full px-4 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
                 ],

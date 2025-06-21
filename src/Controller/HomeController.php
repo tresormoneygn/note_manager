@@ -17,6 +17,9 @@ final class HomeController extends AbstractController
     #[Route('', name: 'app_index', methods: ['GET'])]
     public function index(): Response
     {
+        ini_set('max_execution_time', 6000);
+        ini_set('memory_limit', '1024M');
+
         return $this->render('home/index.html.twig', [
             'controller_name' => 'HomeController',
         ]);

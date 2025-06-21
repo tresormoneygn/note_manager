@@ -29,6 +29,14 @@ class Inscription
     #[ORM\JoinColumn(nullable: false)]
     private ?Programme $programme = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $dateInscription = null;
+
+    public function __construct()
+    {
+        $this->dateInscription = new \DateTimeImmutable();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -78,6 +86,18 @@ class Inscription
     public function setProgramme(?Programme $programme): static
     {
         $this->programme = $programme;
+
+        return $this;
+    }
+
+    public function getDateInscription(): ?\DateTimeImmutable
+    {
+        return $this->dateInscription;
+    }
+
+    public function setDateInscription(?\DateTimeImmutable $dateInscription): static
+    {
+        $this->dateInscription = $dateInscription;
 
         return $this;
     }

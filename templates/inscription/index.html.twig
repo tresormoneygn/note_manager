@@ -43,7 +43,11 @@
                                 {{ inscription.anneeScolaire ?? 'N/A' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                {{ inscription.dateInscription ? inscription.dateInscription|date('d/m/Y') : 'N/A' }}
+                                {% if inscription.dateInscription %}
+                                    {{ inscription.dateInscription|date('d/m/Y H:i') }}
+                                {% else %}
+                                    <span class="text-gray-400">Non définie</span>
+                                {% endif %}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex justify-end space-x-2">

@@ -104,10 +104,10 @@
                                 <tbody class="bg-white divide-y divide-gray-200">
                                 {% for note in dernieres_notes|default([]) %}
                                     <tr class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 whitespace-nowrap">{{ note.etudiant.nomComplet }}</td>
+                                        <td class="px-6 py-4 whitespace-nowrap">{{ note.etudiant.nom }} {{ note.etudiant.prenom }}</td>
                                         <td class="px-6 py-4 whitespace-nowrap">{{ note.matiere.nom }}</td>
-                                        <td class="px-6 py-4 whitespace-nowrap font-medium {% if note.valeur < 10 %}text-red-600{% else %}text-green-600{% endif %}">
-                                            {{ note.valeur|number_format(2) }}
+                                        <td class="px-6 py-4 whitespace-nowrap font-medium {% if ((note.note1 + note.note2 + note.note3) / 3) < 10 %}text-red-600{% else %}text-green-600{% endif %}">
+                                            {{ ((note.note1 + note.note2 + note.note3) / 3)|number_format(2) }}
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {{ note.createdAt|date('d/m/Y') }}
@@ -152,6 +152,9 @@
                             </a>
                             <a href="{{ path('proces_verbal_excel') }}" class="block w-full bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition duration-300 flex items-center" target="_blank">
                                 Générer le Procès-Verbal
+                            </a>
+                            <a href="{{ path('app_statistiques_dashboard') }}" class="block w-full bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition duration-300 flex items-center">
+                                <i class="fas fa-chart-bar mr-2"></i> Voir les Statistiques
                             </a>
                             <a href="{{ path('telecharger_statistiques') }}" class="block w-full bg-white border border-gray-300 px-4 py-2 rounded-md hover:bg-gray-50 transition duration-300 flex items-center" target="_blank">
                                 📥 Télécharger le fichier Excel
@@ -223,33 +226,58 @@
     </div>
 
     <script>
-        // Graphique des notes
+        // Graphique des notes avec données dynamiques
         const gradesCtx = document.getElementById('gradesChart').getContext('2d');
+        const repartitionData = {{ repartition_notes|json_encode|raw }};
+        
         const gradesChart = new Chart(gradesCtx, {
             type: 'bar',
             data: {
                 labels: ['0-5', '5-10', '10-15', '15-20'],
                 datasets: [{
                     label: 'Nombre d\'étudiants',
-                    data: [5, 12, 18, 8],
+                    data: [
+                        repartitionData['0-5'] || 0,
+                        repartitionData['5-10'] || 0,
+                        repartitionData['10-15'] || 0,
+                        repartitionData['15-20'] || 0
+                    ],
                     backgroundColor: [
                         'rgba(239, 68, 68, 0.7)',
                         'rgba(249, 115, 22, 0.7)',
                         'rgba(234, 179, 8, 0.7)',
                         'rgba(16, 185, 129, 0.7)'
                     ],
+                    borderColor: [
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(249, 115, 22, 1)',
+                        'rgba(234, 179, 8, 1)',
+                        'rgba(16, 185, 129, 1)'
+                    ],
                     borderWidth: 1
                 }]
             },
             options: {
+                responsive: true,
+                maintainAspectRatio: false,
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
                     }
                 },
                 plugins: {
                     legend: {
                         display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' étudiant(s)';
+                            }
+                        }
                     }
                 }
             }
@@ -273,5 +301,16 @@
             document.getElementById('theme-toggle').querySelector('i').classList.remove('fa-moon');
             document.getElementById('theme-toggle').querySelector('i').classList.add('fa-sun');
         }
+
+        // Actualisation automatique des statistiques toutes les 5 minutes
+        setInterval(function() {
+            fetch('/api/statistiques')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Statistiques actualisées:', data);
+                    // Ici vous pouvez mettre à jour les éléments de la page si nécessaire
+                })
+                .catch(error => console.error('Erreur lors de l\'actualisation:', error));
+        }, 300000); // 5 minutes
     </script>
 {% endblock %}

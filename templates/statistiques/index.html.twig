@@ -1,0 +1,356 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Statistiques des Notes - Rapports Dynamiques{% endblock %}
+
+{% block body %}
+    <div class="min-h-screen bg-gray-50">
+        <!-- Header -->
+        <header class="bg-white shadow-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <div class="flex justify-between items-center">
+                    <h1 class="text-2xl font-bold text-gray-900">📊 Statistiques des Notes</h1>
+                    <div class="flex items-center space-x-4">
+                        <button id="refresh-stats" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition duration-300">
+                            <i class="fas fa-sync-alt mr-2"></i>Actualiser
+                        </button>
+                        <a href="{{ path('telecharger_statistiques') }}" class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 transition duration-300" target="_blank">
+                            <i class="fas fa-download mr-2"></i>Exporter Excel
+                        </a>
+                        <a href="{{ path('app_home') }}" class="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700 transition duration-300">
+                            <i class="fas fa-arrow-left mr-2"></i>Retour
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <!-- Vue d'ensemble -->
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-blue-100 p-3 rounded-md">
+                            <i class="fas fa-users text-blue-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Total Inscrits</dt>
+                            <dd class="text-2xl font-semibold text-gray-900" id="total-inscrits">-</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-green-100 p-3 rounded-md">
+                            <i class="fas fa-user-check text-green-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Évalués</dt>
+                            <dd class="text-2xl font-semibold text-gray-900" id="total-evalues">-</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-purple-100 p-3 rounded-md">
+                            <i class="fas fa-trophy text-purple-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Admis</dt>
+                            <dd class="text-2xl font-semibold text-gray-900" id="total-admis">-</dd>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white overflow-hidden shadow-lg rounded-lg p-5">
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0 bg-yellow-100 p-3 rounded-md">
+                            <i class="fas fa-chart-line text-yellow-600"></i>
+                        </div>
+                        <div class="ml-5 w-0 flex-1">
+                            <dt class="text-sm font-medium text-gray-500 truncate">Moyenne Générale</dt>
+                            <dd class="text-2xl font-semibold text-gray-900" id="moyenne-generale">-</dd>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Graphiques -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                <!-- Répartition des notes -->
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition des Notes</h3>
+                    <canvas id="repartitionChart" height="300"></canvas>
+                </div>
+
+                <!-- Taux de réussite par filière -->
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Taux de Réussite par Filière</h3>
+                    <canvas id="filiereChart" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Tableau détaillé par niveau -->
+            <div class="bg-white shadow-lg rounded-lg overflow-hidden mb-8">
+                <div class="px-6 py-4 border-b border-gray-200">
+                    <h3 class="text-lg font-medium text-gray-900">Statistiques Détaillées par Niveau</h3>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200" id="stats-table">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Niveau</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inscrits</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Évalués</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Admis</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taux Réussite</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filles Inscrites</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Filles Admises</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Abandons</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200" id="stats-tbody">
+                            <!-- Données chargées dynamiquement -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Graphiques supplémentaires -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Évolution par genre -->
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Répartition par Genre</h3>
+                    <canvas id="genreChart" height="300"></canvas>
+                </div>
+
+                <!-- Cours non validés -->
+                <div class="bg-white shadow-lg rounded-lg p-6">
+                    <h3 class="text-lg font-medium text-gray-900 mb-4">Distribution des Échecs</h3>
+                    <canvas id="echecsChart" height="300"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let statistiquesData = {};
+
+        // Fonction pour charger les statistiques
+        async function chargerStatistiques() {
+            try {
+                const response = await fetch('/api/statistiques');
+                statistiquesData = await response.json();
+                mettreAJourInterface();
+            } catch (error) {
+                console.error('Erreur lors du chargement des statistiques:', error);
+            }
+        }
+
+        // Fonction pour mettre à jour l'interface
+        function mettreAJourInterface() {
+            // Calculer les totaux
+            let totalInscrits = 0, totalEvalues = 0, totalAdmis = 0;
+            let totalNotes = 0, sommeNotes = 0;
+
+            Object.values(statistiquesData).forEach(niveau => {
+                totalInscrits += niveau.effectif_inscrit.total;
+                totalEvalues += niveau.effectif_evalue.total;
+                totalAdmis += niveau.admis.nbre_admis;
+            });
+
+            // Mettre à jour les cartes
+            document.getElementById('total-inscrits').textContent = totalInscrits;
+            document.getElementById('total-evalues').textContent = totalEvalues;
+            document.getElementById('total-admis').textContent = totalAdmis;
+            document.getElementById('moyenne-generale').textContent = '{{ moyenne_generale ?? "0.00" }}/20';
+
+            // Mettre à jour le tableau
+            mettreAJourTableau();
+            
+            // Mettre à jour les graphiques
+            mettreAJourGraphiques();
+        }
+
+        // Fonction pour mettre à jour le tableau
+        function mettreAJourTableau() {
+            const tbody = document.getElementById('stats-tbody');
+            tbody.innerHTML = '';
+
+            Object.entries(statistiquesData).forEach(([niveau, data]) => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50';
+                
+                const tauxReussite = data.effectif_inscrit.total > 0 
+                    ? ((data.admis.nbre_admis / data.effectif_inscrit.total) * 100).toFixed(1)
+                    : '0.0';
+
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">${niveau}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">${data.effectif_inscrit.total}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-gray-500">${data.effectif_evalue.total}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-green-600 font-medium">${data.admis.nbre_admis}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${tauxReussite >= 50 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+                            ${tauxReussite}%
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-purple-600">${data.effectif_inscrit.filles}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-purple-600">${data.admis.filles_admises}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-red-600">${data.abandons.total}</td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Fonction pour mettre à jour les graphiques
+        function mettreAJourGraphiques() {
+            // Graphique de répartition des notes
+            const repartitionData = {{ repartition_notes|json_encode|raw }};
+            
+            new Chart(document.getElementById('repartitionChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['0-5 (Très faible)', '5-10 (Faible)', '10-15 (Moyen)', '15-20 (Excellent)'],
+                    datasets: [{
+                        data: [
+                            repartitionData['0-5'] || 0,
+                            repartitionData['5-10'] || 0,
+                            repartitionData['10-15'] || 0,
+                            repartitionData['15-20'] || 0
+                        ],
+                        backgroundColor: [
+                            '#EF4444',
+                            '#F97316',
+                            '#EAB308',
+                            '#10B981'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Graphique par filière
+            const niveaux = Object.keys(statistiquesData);
+            const tauxReussite = niveaux.map(niveau => {
+                const data = statistiquesData[niveau];
+                return data.effectif_inscrit.total > 0 
+                    ? ((data.admis.nbre_admis / data.effectif_inscrit.total) * 100).toFixed(1)
+                    : 0;
+            });
+
+            new Chart(document.getElementById('filiereChart'), {
+                type: 'bar',
+                data: {
+                    labels: niveaux,
+                    datasets: [{
+                        label: 'Taux de réussite (%)',
+                        data: tauxReussite,
+                        backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Graphique par genre
+            let totalHommes = 0, totalFemmes = 0;
+            Object.values(statistiquesData).forEach(niveau => {
+                totalFemmes += niveau.effectif_inscrit.filles;
+                totalHommes += niveau.effectif_inscrit.total - niveau.effectif_inscrit.filles;
+            });
+
+            new Chart(document.getElementById('genreChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Hommes', 'Femmes'],
+                    datasets: [{
+                        data: [totalHommes, totalFemmes],
+                        backgroundColor: ['#3B82F6', '#EC4899']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+
+            // Graphique des échecs
+            let coursNonValides = {1: 0, 2: 0, 3: 0, 4: 0, '>=5': 0};
+            Object.values(statistiquesData).forEach(niveau => {
+                Object.entries(niveau.cours_non_valides).forEach(([key, value]) => {
+                    coursNonValides[key] += value;
+                });
+            });
+
+            new Chart(document.getElementById('echecsChart'), {
+                type: 'bar',
+                data: {
+                    labels: ['1 échec', '2 échecs', '3 échecs', '4 échecs', '5+ échecs'],
+                    datasets: [{
+                        label: 'Nombre d\'étudiants',
+                        data: [
+                            coursNonValides[1],
+                            coursNonValides[2],
+                            coursNonValides[3],
+                            coursNonValides[4],
+                            coursNonValides['>=5']
+                        ],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: 'rgba(239, 68, 68, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Event listeners
+        document.getElementById('refresh-stats').addEventListener('click', chargerStatistiques);
+
+        // Charger les données au démarrage
+        document.addEventListener('DOMContentLoaded', chargerStatistiques);
+
+        // Actualisation automatique toutes les 2 minutes
+        setInterval(chargerStatistiques, 120000);
+    </script>
+{% endblock %}
